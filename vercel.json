@@ -1,0 +1,12 @@
+ }
+  ],
+  "env": {
+    "NEXT_PRIVATE_TARGET": "server"
+  },
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rootDirectory": "src"
+}

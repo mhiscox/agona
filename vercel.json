@@ -1,5 +1,8 @@
- }
-  ],
+{
+  "version": 2,
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
   "env": {
     "NEXT_PRIVATE_TARGET": "server"
   },

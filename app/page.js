@@ -1,66 +1,29 @@
-import Image from "next/image";
-import styles from "./page.module.css";
-
 export default function Home() {
+  const sample = "/api/query?prompt=" + encodeURIComponent(
+    "In one sentence, what does Agona do?"
+  );
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main style={{maxWidth:720,margin:"60px auto",padding:"0 20px",fontFamily:"system-ui"}}>
+      <h1>Agona</h1>
+      <p>LLMs compete in real time to answer your API calls on price, latency, and quality.</p>
+
+      <h3>Live demo</h3>
+      <ul>
+        <li><a href="/api/health">/api/health</a></li>
+        <li><a href={sample}>/api/query?prompt=…</a></li>
+      </ul>
+
+      <h3>cURL</h3>
+      <pre style={{whiteSpace:"pre-wrap",background:"#111",color:"#eee",padding:"12px",borderRadius:8}}>
+{`curl -s -X POST https://www.agona.ai/api/query \\
+  -H "Content-Type: application/json" \\
+  -d '{"prompt":"In one sentence, what does Agona do?"}' | jq .`}
+      </pre>
+
+      <p style={{marginTop:24,fontSize:14,opacity:.7}}>
+        Built this weekend. More models and bidding logic coming next.
+      </p>
+    </main>
   );
 }

@@ -466,6 +466,19 @@ export async function POST(req) {
     }
     
     const savings_per_1k_tokens_usd = per1k(savings_usd);
+    
+    // Calculate estimated savings for 1M tokens
+    // Get total tokens for this query (input + output for winner)
+    const winnerInputTokens = approxTokens(prompt);
+    const winnerOutputTokens = approxTokens(winner.answer || "");
+    const totalTokens = winnerInputTokens + winnerOutputTokens;
+    
+    // Calculate savings per token, then scale to 1M tokens
+    let savings_per_1m_tokens_usd = null;
+    if (totalTokens > 0 && savings_usd > 0) {
+      const savingsPerToken = savings_usd / totalTokens;
+      savings_per_1m_tokens_usd = round6(savingsPerToken * 1000000);
+    }
 
       // Log full telemetry
       const supabase = getSupabaseClient();
@@ -482,6 +495,7 @@ export async function POST(req) {
             savings_usd,
             savings_pct,
             savings_per_1k_tokens_usd,
+            savings_per_1m_tokens_usd,
           }]);
         } catch (logErr) {
           console.error("Supabase logging failed:", logErr);
@@ -500,6 +514,7 @@ export async function POST(req) {
         savings_usd,
         savings_pct,
         savings_per_1k_tokens_usd,
+        savings_per_1m_tokens_usd,
       }),
       { headers: { "Content-Type": "application/json" } }
     );

@@ -265,12 +265,19 @@ export default function Home() {
               
                   {/* Decision explanation */}
                   {results.savings_pct !== null && results.savings_pct > 0 && (
-                    <p style={{ margin: '8px 0 0 0', fontSize: 12, color: '#666' }}>
-                      Won on price (−{results.savings_pct.toFixed(1)}%) with comparable quality.
-                      {!isWinnerFastest && fastestResult && deltaMs && (
-                        ` Fastest was ${fastestResult.id} by ${deltaMs}ms.`
+                    <div style={{ margin: '8px 0 0 0' }}>
+                      <p style={{ margin: '0 0 4px 0', fontSize: 12, color: '#666' }}>
+                        Won on price (−{results.savings_pct.toFixed(1)}%) with comparable quality.
+                        {!isWinnerFastest && fastestResult && deltaMs && (
+                          ` Fastest was ${fastestResult.id} by ${deltaMs}ms.`
+                        )}
+                      </p>
+                      {results.savings_per_1m_tokens_usd && results.savings_per_1m_tokens_usd > 0 && (
+                        <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#2e7d32', fontWeight: 600 }}>
+                          💰 Estimated savings: ${results.savings_per_1m_tokens_usd.toFixed(2)} per 1M tokens
+                        </p>
                       )}
-                    </p>
+                    </div>
                   )}
                   {results.savings_pct === null || results.savings_pct === 0 ? (
                     <p style={{ margin: '8px 0 0 0', fontSize: 12, color: '#666' }}>

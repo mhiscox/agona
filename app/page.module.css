@@ -139,3 +139,39 @@ a.secondary {
     --button-secondary-border: #1a1a1a;
   }
 }
+
+/* Demo results table styling */
+.demoTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.demoTable th {
+  text-align: left;
+  padding: 8px;
+  font-weight: 600;
+  color: #000;
+  border-bottom: 1px solid #ddd;
+}
+
+.demoTable th:not(:first-child) {
+  text-align: right;
+  font-family: monospace;
+}
+
+.demoTable td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 12px;
+}
+
+.demoTable td:not(:first-child):not(:last-child) {
+  text-align: right;
+  font-family: monospace;
+  color: #666;
+}
+
+.demoTable tbody tr:has(td:first-child:has(+ td + td + td + td:contains("ok"))) {
+  background-color: #f0f8f0;
+}

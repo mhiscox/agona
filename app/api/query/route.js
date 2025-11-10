@@ -17,10 +17,29 @@ const {
 } = process.env;
 
 /* ========= CLIENTS ========= */
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+let openaiClient;
+function getOpenAIClient() {
+  if (openaiClient !== undefined) return openaiClient;
+  if (!OPENAI_API_KEY) {
+    openaiClient = null;
+    return openaiClient;
+  }
+  openaiClient = new OpenAI({ apiKey: OPENAI_API_KEY });
+  return openaiClient;
+}
+
+let supabaseClient;
+function getSupabaseClient() {
+  if (supabaseClient !== undefined) return supabaseClient;
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    supabaseClient = null;
+    return supabaseClient;
+  }
+  supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return supabaseClient;
+}
 
 /* ========= CONSTANTS / HELPERS ========= */
 const BRAND_SYSTEM = `
@@ -114,10 +133,21 @@ async function withRetry(fn, attempts = 2, backoffMs = 600) {
 
 /* ========= PROVIDERS ========= */
 async function callOpenAI(prompt) {
+  const client = getOpenAIClient();
+  if (!client) {
+    return {
+      id: "openai:gpt-4o-mini",
+      model_id: "gpt-4o-mini",
+      answer: "",
+      ok: false,
+      latency_ms: 0,
+      error: "Missing OPENAI_API_KEY",
+    };
+  }
   return timed(async () => {
     const resp = await withRetry(
       () =>
-        openai.chat.completions.create({
+        client.chat.completions.create({
           model: "gpt-4o-mini",
           temperature: 0,
           messages: [
@@ -265,19 +295,26 @@ export async function POST(req) {
     const savings_pct = baseline > 0 ? +((savings_usd / baseline) * 100).toFixed(2) : null;
     const savings_per_1k_tokens_usd = per1k(savings_usd);
 
-    // Log full telemetry
-    await supabase.from("query_log").insert([{
-      request_id,
-      prompt,
-      answer: winner?.answer || "",
-      model_id: winner?.model_id || null,
-      latency_ms: winner?.latency_ms || null,
-      providers: candidates,
-      winner: winner?.id || null,
-      savings_usd,
-      savings_pct,
-      savings_per_1k_tokens_usd,
-    }]);
+      // Log full telemetry
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          await supabase.from("query_log").insert([{
+            request_id,
+            prompt,
+            answer: winner?.answer || "",
+            model_id: winner?.model_id || null,
+            latency_ms: winner?.latency_ms || null,
+            providers: candidates,
+            winner: winner?.id || null,
+            savings_usd,
+            savings_pct,
+            savings_per_1k_tokens_usd,
+          }]);
+        } catch (logErr) {
+          console.error("Supabase logging failed:", logErr);
+        }
+      }
 
     return new Response(
       JSON.stringify({

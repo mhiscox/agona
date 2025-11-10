@@ -263,15 +263,23 @@ export default function Home() {
               </div>
               <p style={{ margin: 0, color: '#333', fontSize: 14 }}>{results.answer || 'No answer'}</p>
               
-              {/* Decision explanation */}
-              {results.savings_pct !== null && (
-                <p style={{ margin: '8px 0 0 0', fontSize: 12, color: '#666' }}>
-                  Won on price (−{results.savings_pct.toFixed(1)}%) with comparable quality.
-                  {!isWinnerFastest && fastestResult && deltaMs && (
-                    ` Fastest was ${fastestResult.id} by ${deltaMs}ms.`
+                  {/* Decision explanation */}
+                  {results.savings_pct !== null && results.savings_pct > 0 && (
+                    <p style={{ margin: '8px 0 0 0', fontSize: 12, color: '#666' }}>
+                      Won on price (−{results.savings_pct.toFixed(1)}%) with comparable quality.
+                      {!isWinnerFastest && fastestResult && deltaMs && (
+                        ` Fastest was ${fastestResult.id} by ${deltaMs}ms.`
+                      )}
+                    </p>
                   )}
-                </p>
-              )}
+                  {results.savings_pct === null || results.savings_pct === 0 ? (
+                    <p style={{ margin: '8px 0 0 0', fontSize: 12, color: '#666' }}>
+                      Won based on best overall score (quality, latency, and price).
+                      {!isWinnerFastest && fastestResult && deltaMs && (
+                        ` Fastest was ${fastestResult.id} by ${deltaMs}ms.`
+                      )}
+                    </p>
+                  ) : null}
             </div>
 
             {/* Results table */}

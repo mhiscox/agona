@@ -430,11 +430,41 @@ export async function POST(req) {
     const winner = pickWinner(candidates);
 
     // Savings vs next-best (Option B)
-    const okCands = candidates.filter((c) => c.ok && typeof c.price_usd === "number");
-    const others = okCands.filter((c) => c.id !== winner.id);
-    const baseline = others.length ? Math.min(...others.map((c) => c.price_usd)) : winner.price_usd;
-    const savings_usd = round6(Math.max(0, (baseline ?? 0) - (winner.price_usd ?? 0)));
-    const savings_pct = baseline > 0 ? +((savings_usd / baseline) * 100).toFixed(2) : null;
+    // Compare winner to the next-best alternative (what you would have paid if winner wasn't available)
+    const okCands = candidates.filter((c) => c.ok && typeof c.price_usd === "number" && c.price_usd > 0);
+    
+    let baseline = null;
+    let savings_usd = 0;
+    let savings_pct = null;
+    
+    if (okCands.length > 1) {
+      // Sort all ok candidates by price to find alternatives
+      const sortedByPrice = [...okCands].sort((a, b) => a.price_usd - b.price_usd);
+      const winnerPrice = winner.price_usd || 0;
+      
+      // Find where winner ranks
+      const winnerIndex = sortedByPrice.findIndex(c => c.id === winner.id);
+      
+      if (winnerIndex === 0) {
+        // Winner is cheapest - compare to second cheapest
+        baseline = sortedByPrice[1]?.price_usd;
+      } else if (winnerIndex > 0) {
+        // Winner is not cheapest - compare to cheapest option
+        baseline = sortedByPrice[0]?.price_usd;
+      } else {
+        // Winner not in sorted list (shouldn't happen, but fallback)
+        baseline = sortedByPrice[0]?.price_usd;
+      }
+      
+      if (baseline && baseline > 0 && winnerPrice > 0) {
+        savings_usd = round6(Math.max(0, baseline - winnerPrice));
+        // Only show percentage if there's meaningful savings (avoid showing 0.0% for tiny differences)
+        if (savings_usd > 0.000001) {
+          savings_pct = +((savings_usd / baseline) * 100).toFixed(2);
+        }
+      }
+    }
+    
     const savings_per_1k_tokens_usd = per1k(savings_usd);
 
       // Log full telemetry

@@ -20,6 +20,8 @@ export default function Home() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkResults, setBulkResults] = useState(null);
   const [bulkError, setBulkError] = useState(null);
+  const [auctionStage, setAuctionStage] = useState('idle'); // 'idle', 'classifying', 'bidding', 'processing'
+  const [activeBids, setActiveBids] = useState([]);
 
   const promptChips = [
     'What does Agona do?',
@@ -72,10 +74,27 @@ export default function Home() {
   ];
 
   const runBulkDemo = async () => {
-
     setBulkLoading(true);
     setBulkError(null);
     setBulkResults(null);
+    setAuctionStage('classifying');
+    setActiveBids([]);
+
+    // Simulate auction stages with delays
+    setTimeout(() => {
+      setAuctionStage('bidding');
+      // Simulate bids coming in
+      const models = ['OpenAI GPT-4o-mini', 'Cloudflare Llama 3.1', 'Cloudflare Mistral 7B'];
+      models.forEach((model, idx) => {
+        setTimeout(() => {
+          setActiveBids(prev => [...prev, { model, price: (0.0001 + Math.random() * 0.0002).toFixed(6), score: 150 + Math.floor(Math.random() * 50) }]);
+        }, idx * 300);
+      });
+    }, 800);
+
+    setTimeout(() => {
+      setAuctionStage('processing');
+    }, 2000);
 
     try {
       const response = await fetch('/api/bulk-query', {
@@ -87,13 +106,17 @@ export default function Home() {
 
       if (data.error) {
         setBulkError(data.error);
+        setAuctionStage('idle');
       } else {
         setBulkResults(data);
+        setAuctionStage('idle');
       }
     } catch (err) {
       setBulkError('Failed to fetch results. Make sure environment variables are configured.');
+      setAuctionStage('idle');
     } finally {
       setBulkLoading(false);
+      setActiveBids([]);
     }
   };
 
@@ -484,6 +507,108 @@ export default function Home() {
             border: '2px solid #0066cc',
             marginTop: 16
           }}>
+            {/* Auction Header */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: 24,
+              padding: '16px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: 8,
+              color: '#fff'
+            }}>
+              <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>🏛️ Live Marketplace Auction</div>
+              <div style={{ fontSize: 14, opacity: 0.9 }}>
+                {auctionStage === 'classifying' && '📊 Analyzing 5 prompts...'}
+                {auctionStage === 'bidding' && '💰 Models are bidding...'}
+                {auctionStage === 'processing' && '⚡ Processing winning bids...'}
+              </div>
+            </div>
+
+            {/* Prompts Being Auctioned */}
+            {auctionStage !== 'idle' && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#000' }}>
+                  📋 Prompts on the Block:
+                </div>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                  gap: 8 
+                }}>
+                  {samplePrompts.map((prompt, idx) => (
+                    <div 
+                      key={idx}
+                      style={{
+                        padding: '10px',
+                        background: '#f5f5f5',
+                        borderRadius: 6,
+                        fontSize: 12,
+                        border: '1px solid #ddd',
+                        animation: auctionStage === 'bidding' ? 'pulse 1.5s infinite' : 'none'
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, marginBottom: 4 }}>#{idx + 1}</div>
+                      <div style={{ color: '#666' }}>{prompt.substring(0, 40)}...</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Live Bidding Feed */}
+            {auctionStage === 'bidding' && (
+              <div style={{ 
+                background: '#f9f9f9', 
+                padding: 16, 
+                borderRadius: 8,
+                marginBottom: 16,
+                border: '2px solid #7b1fa2'
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#000' }}>
+                  💰 Live Bidding Activity:
+                </div>
+                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  {activeBids.length === 0 ? (
+                    <div style={{ color: '#666', fontSize: 12, fontStyle: 'italic' }}>
+                      Waiting for bids...
+                    </div>
+                  ) : (
+                    activeBids.map((bid, idx) => (
+                      <div 
+                        key={idx}
+                        style={{
+                          padding: '10px',
+                          marginBottom: 8,
+                          background: '#fff',
+                          borderRadius: 6,
+                          border: '1px solid #ddd',
+                          animation: 'slideIn 0.3s ease-out',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13, color: '#000' }}>
+                            🎯 {bid.model}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>
+                            Bid Score: <strong>{bid.score}</strong>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: '#2e7d32', fontFamily: 'monospace' }}>
+                            ${bid.price}
+                          </div>
+                          <div style={{ fontSize: 10, color: '#666' }}>per request</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Visual Flow */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ 
@@ -499,13 +624,14 @@ export default function Home() {
                     width: 60, 
                     height: 60, 
                     borderRadius: '50%', 
-                    background: '#e3f2fd', 
+                    background: auctionStage === 'classifying' ? '#e3f2fd' : '#f5f5f5',
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
                     margin: '0 auto 8px',
-                    border: '2px solid #1976d2',
-                    fontSize: 24
+                    border: auctionStage === 'classifying' ? '3px solid #1976d2' : '2px solid #ccc',
+                    fontSize: 24,
+                    transition: 'all 0.3s'
                   }}>
                     📋
                   </div>
@@ -522,19 +648,22 @@ export default function Home() {
                     width: 60, 
                     height: 60, 
                     borderRadius: '50%', 
-                    background: '#fff3e0', 
+                    background: auctionStage === 'classifying' ? '#fff3e0' : '#f5f5f5',
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
                     margin: '0 auto 8px',
-                    border: '2px solid #f57c00',
+                    border: auctionStage === 'classifying' ? '3px solid #f57c00' : '2px solid #ccc',
                     fontSize: 24,
-                    animation: 'pulse 2s infinite'
+                    animation: auctionStage === 'classifying' ? 'pulse 2s infinite' : 'none',
+                    transition: 'all 0.3s'
                   }}>
                     ⚙️
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>Agona</div>
-                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Classifying...</div>
+                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
+                    {auctionStage === 'classifying' ? 'Classifying...' : 'Complete'}
+                  </div>
                 </div>
 
                 {/* Arrow */}
@@ -546,18 +675,22 @@ export default function Home() {
                     width: 60, 
                     height: 60, 
                     borderRadius: '50%', 
-                    background: '#f3e5f5', 
+                    background: auctionStage === 'bidding' ? '#f3e5f5' : auctionStage === 'processing' ? '#e8f5e9' : '#f5f5f5',
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
                     margin: '0 auto 8px',
-                    border: '2px solid #7b1fa2',
-                    fontSize: 24
+                    border: auctionStage === 'bidding' ? '3px solid #7b1fa2' : auctionStage === 'processing' ? '3px solid #4caf50' : '2px solid #ccc',
+                    fontSize: 24,
+                    animation: auctionStage === 'bidding' ? 'pulse 1.5s infinite' : 'none',
+                    transition: 'all 0.3s'
                   }}>
-                    💰
+                    {auctionStage === 'processing' ? '✅' : '💰'}
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>Bidding</div>
-                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Models competing...</div>
+                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
+                    {auctionStage === 'bidding' ? `${activeBids.length}/3 models` : auctionStage === 'processing' ? 'Winners selected' : 'Waiting...'}
+                  </div>
                 </div>
 
                 {/* Arrow */}
@@ -569,19 +702,23 @@ export default function Home() {
                     width: 60, 
                     height: 60, 
                     borderRadius: '50%', 
-                    background: '#e8f5e9', 
+                    background: auctionStage === 'processing' ? '#e8f5e9' : '#f5f5f5',
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
                     margin: '0 auto 8px',
-                    border: '2px solid #388e3c',
+                    border: auctionStage === 'processing' ? '3px solid #388e3c' : '2px solid #ccc',
                     fontSize: 24,
-                    opacity: 0.5
+                    animation: auctionStage === 'processing' ? 'pulse 2s infinite' : 'none',
+                    transition: 'all 0.3s',
+                    opacity: auctionStage === 'processing' ? 1 : 0.5
                   }}>
                     ✅
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>Results</div>
-                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Processing...</div>
+                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
+                    {auctionStage === 'processing' ? 'Processing...' : 'Pending'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -594,22 +731,42 @@ export default function Home() {
               fontSize: 13,
               color: '#333'
             }}>
-              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 16 }}>📊</span>
-                <span>Classifying prompts into tiers (Low/Medium/High complexity)...</span>
-              </div>
-              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 16 }}>🔍</span>
-                <span>Analyzing prompt characteristics and requirements...</span>
-              </div>
-              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 16 }}>💰</span>
-                <span>Models calculating bids based on price, latency, and capabilities...</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 16 }}>⚡</span>
-                <span>Processing winning bids and generating responses...</span>
-              </div>
+              {auctionStage === 'classifying' && (
+                <>
+                  <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>📊</span>
+                    <span>Classifying prompts into tiers (Low/Medium/High complexity)...</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>🔍</span>
+                    <span>Analyzing prompt characteristics and requirements...</span>
+                  </div>
+                </>
+              )}
+              {auctionStage === 'bidding' && (
+                <>
+                  <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>💰</span>
+                    <span>Models calculating bids based on price, latency, and capabilities...</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>⚡</span>
+                    <span>Comparing bids and selecting winners...</span>
+                  </div>
+                </>
+              )}
+              {auctionStage === 'processing' && (
+                <>
+                  <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>✅</span>
+                    <span>Winners selected! Processing responses...</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>📈</span>
+                    <span>Calculating savings and generating final results...</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

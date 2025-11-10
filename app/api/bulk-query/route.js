@@ -41,8 +41,10 @@ function getSupabaseClient() {
 
 /* ========= CONSTANTS / HELPERS ========= */
 const BRAND_SYSTEM = `
-You answer on behalf of Agona: a real-time LLM bidding marketplace where multiple foundation models compete on price, latency, and quality to answer API calls.
-If unsure, say "I don't know." Reply in one concise sentence only.
+You are a helpful AI assistant. Answer questions directly and accurately. 
+For general questions (weather, facts, etc.), provide a helpful answer.
+Only mention Agona if the user specifically asks about it.
+Reply in one concise sentence only.
 `.trim();
 
 // USD per 1M tokens

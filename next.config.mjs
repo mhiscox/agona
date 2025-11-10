@@ -4,6 +4,23 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   
+  // Redirect apex domain to www
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'agona.ai',
+          },
+        ],
+        destination: 'https://www.agona.ai/:path*',
+        permanent: true,
+      },
+    ];
+  },
+  
   // Security headers
   async headers() {
     return [

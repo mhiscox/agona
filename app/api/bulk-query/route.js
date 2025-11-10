@@ -101,7 +101,7 @@ function getModelCharacteristics(modelId) {
 }
 
 // Calculate bid score and rationale
-function calculateBidScore(modelId, prompt, tier, estimatedPrice, estimatedLatency) {
+function calculateBidScore(modelId, prompt, tier, estimatedPrice, estimatedLatency, priority, promptIndex) {
   const chars = getModelCharacteristics(modelId);
   let score = 0;
   const rationale = [];
@@ -117,8 +117,36 @@ function calculateBidScore(modelId, prompt, tier, estimatedPrice, estimatedLaten
     rationale.push("Good quality model");
   }
   
+  // Priority-based adjustments: High priority prompts favor premium models
+  if (priority === "high") {
+    if (modelId.startsWith("openai:")) {
+      score += 25 + (Math.random() * 10); // 25-35 bonus for premium on high priority
+      rationale.push("Premium model for high priority");
+    } else if (modelId.includes("llama")) {
+      score += 10 + (Math.random() * 5); // 10-15 bonus
+    }
+  }
+  
+  // Tier-based adjustments: High complexity favors premium, low complexity favors cost-effective
+  if (tier === "high") {
+    if (modelId.startsWith("openai:")) {
+      score += 20 + (Math.random() * 10); // 20-30 bonus for complex prompts
+      rationale.push("Best for complex tasks");
+    }
+  } else if (tier === "low") {
+    // Low tier favors cheaper models more
+    if (modelId.includes("mistral")) {
+      score += 15 + (Math.random() * 10); // 15-25 bonus for simple prompts
+      rationale.push("Optimized for simple tasks");
+    } else if (modelId.includes("llama")) {
+      score += 10 + (Math.random() * 5); // 10-15 bonus
+    }
+  }
+  
   // Price competitiveness (lower price = higher score, with variation)
-  const priceMultiplier = 50000 + (Math.random() * 20000); // Vary between 50k-70k
+  // Make price impact stronger for lower tier prompts
+  const priceWeight = tier === "low" ? 80000 : tier === "medium" ? 60000 : 40000;
+  const priceMultiplier = priceWeight + (Math.random() * 20000);
   const priceScore = Math.max(0, 50 - (estimatedPrice * priceMultiplier));
   score += priceScore;
   if (chars.priceTier === "low") {
@@ -139,6 +167,12 @@ function calculateBidScore(modelId, prompt, tier, estimatedPrice, estimatedLaten
     score += tierBonus;
     rationale.push("Optimized for this complexity");
   }
+  
+  // Prompt-specific variation (based on prompt index to distribute wins)
+  // Rotate which model gets a boost based on prompt index
+  const modelIndex = modelId.includes("openai") ? 0 : modelId.includes("llama") ? 1 : 2;
+  const rotationBonus = ((promptIndex + modelIndex) % 3 === 0) ? 15 + (Math.random() * 10) : 0;
+  score += rotationBonus;
   
   // Prompt-specific variation (based on prompt length/complexity)
   const promptVariation = (prompt.length % 20) * 0.5; // 0-10 variation based on prompt
@@ -351,7 +385,8 @@ export async function POST(req) {
     const results = [];
 
     // Process each prompt
-    for (const promptData of classifiedPrompts) {
+    for (let idx = 0; idx < classifiedPrompts.length; idx++) {
+      const promptData = classifiedPrompts[idx];
       const promptBids = [];
       
       // Each model decides whether to bid
@@ -369,7 +404,15 @@ export async function POST(req) {
           const latencyVariation = Math.random() * 200 - 100; // ±100ms
           const estimatedLatency = Math.max(200, baseLatency + latencyVariation);
           
-          const bidResult = calculateBidScore(model.id, promptData.text, promptData.tier, estimatedPrice, estimatedLatency);
+          const bidResult = calculateBidScore(
+            model.id, 
+            promptData.text, 
+            promptData.tier, 
+            estimatedPrice, 
+            estimatedLatency,
+            promptData.priority,
+            idx
+          );
           
           promptBids.push({
             modelId: model.id,
@@ -397,8 +440,14 @@ export async function POST(req) {
           
           const inputTokens = approxTokens(promptData.text);
           const outputTokens = approxTokens(response.answer || "");
-          const actualPrice = round6(estimatePriceUSD(model.id, inputTokens, outputTokens));
-          const agonaCut = round6(actualPrice * AGONA_CUT_PCT);
+          const basePrice = estimatePriceUSD(model.id, inputTokens, outputTokens);
+          // Ensure minimum price to make Agona cut meaningful (at least $0.0001)
+          const minPrice = 0.0001;
+          const actualPrice = round6(Math.max(basePrice, minPrice));
+          
+          // Calculate Agona cut (5% of price, minimum $0.00001)
+          const agonaCutBase = actualPrice * AGONA_CUT_PCT;
+          const agonaCut = round6(Math.max(agonaCutBase, 0.00001));
           const modelRevenue = round6(actualPrice - agonaCut);
 
           // Calculate market price (most expensive bid) and savings

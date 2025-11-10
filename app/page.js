@@ -1,3 +1,5 @@
+import LiveDemo from './components/LiveDemo';
+
 export default function Home() {
   const sample = "/api/query?prompt=" + encodeURIComponent(
     "In one sentence, what does Agona do?"
@@ -39,6 +41,8 @@ export default function Home() {
           <li><strong>One API:</strong> No need to manage multiple provider accounts or compare prices manually</li>
         </ul>
       </div>
+
+      <LiveDemo />
 
       <div style={{borderTop:"1px solid #ddd",paddingTop:32,marginTop:32,color:"#1a1a1a"}}>
         <h3 style={{fontSize:"clamp(18px, 4vw, 20px)",marginBottom:16,color:"#000"}}>Try it now</h3>

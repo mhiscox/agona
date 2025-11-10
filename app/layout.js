@@ -14,6 +14,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Agona - LLM Bidding Marketplace",
   description: "Real-time LLM bidding marketplace where multiple foundation models compete on price, latency, and quality",
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({ children }) {

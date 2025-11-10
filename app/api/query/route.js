@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit, getClientIdentifier } from "../utils/rateLimit";
 
 /* ========= ENV ========= */
 const {
@@ -82,11 +83,34 @@ function onBrand(text = "") {
 
 function score(p) {
   let s = 0;
-  if (p.ok) s += 1;
-  if ((p.answer || "").length > 30) s += 1;
-  if ((p.latency_ms ?? 9e9) < 3000) s += 0.5;
-  if (typeof p.price_usd === "number" && p.price_usd <= 0.0002) s += 0.5; // prefer cheaper
-  return s;
+  
+  // Base score for successful response
+  if (p.ok) {
+    s += 10;
+    
+    // Answer quality: longer answers get more points (up to +5)
+    const answerLen = (p.answer || "").length;
+    s += Math.min(5, answerLen / 20); // +0.5 per 10 chars, max +5
+    
+    // Latency score: faster is better (up to +3)
+    // 0ms = +3, 1000ms = +2, 2000ms = +1, 3000ms+ = +0
+    const latency = p.latency_ms ?? 9e9;
+    if (latency < 3000) {
+      s += Math.max(0, 3 - (latency / 1000)); // Linear decay from 3 to 0
+    }
+    
+    // Price score: cheaper is better (up to +2)
+    // $0 = +2, $0.0001 = +1.5, $0.0002 = +1, $0.0005+ = +0
+    if (typeof p.price_usd === "number" && p.price_usd > 0) {
+      if (p.price_usd <= 0.0002) {
+        s += 2 - (p.price_usd / 0.0001); // Linear from 2 to 1
+      } else if (p.price_usd <= 0.0005) {
+        s += Math.max(0, 1 - ((p.price_usd - 0.0002) / 0.0003)); // Linear from 1 to 0
+      }
+    }
+  }
+  
+  return Math.round(s * 100) / 100; // Round to 2 decimals for display
 }
 
 function pickWinner(cands) {
@@ -278,12 +302,94 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(req);
+    const rateLimitResult = rateLimit(
+      clientId,
+      Number(process.env.RATE_LIMIT_MAX_REQUESTS || 10), // Default: 10 requests
+      Number(process.env.RATE_LIMIT_WINDOW_MS || 60000) // Default: 1 minute
+    );
+
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Rate limit exceeded",
+          message: `Too many requests. Limit: ${rateLimitResult.limit} per ${rateLimitResult.reset - Date.now()}ms`,
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000)
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.reset.toString(),
+            "Retry-After": Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+          },
+        }
+      );
+    }
+
+    // Optional: API key authentication
+    const apiKey = req.headers.get('x-api-key') || req.headers.get('authorization')?.replace('Bearer ', '');
+    const requiredApiKey = process.env.API_KEY;
+    
+    if (requiredApiKey && apiKey !== requiredApiKey) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", message: "Invalid or missing API key" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const { prompt } = await req.json();
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Missing prompt" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Validate prompt length to prevent abuse
+    const MAX_PROMPT_LENGTH = Number(process.env.MAX_PROMPT_LENGTH || 5000); // Default: 5000 chars
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Prompt too long", 
+          message: `Prompt must be ${MAX_PROMPT_LENGTH} characters or less`,
+          length: prompt.length,
+          maxLength: MAX_PROMPT_LENGTH
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Cost control: Estimate max cost before processing
+    const estimatedMaxCost = estimatePriceUSD(
+      "openai:gpt-4o-mini", 
+      approxTokens(prompt), 
+      approxTokens("") * 10 // Estimate 10x input for output
+    );
+    const MAX_COST_PER_REQUEST = Number(process.env.MAX_COST_PER_REQUEST || 0.01); // Default: $0.01
+    
+    if (estimatedMaxCost > MAX_COST_PER_REQUEST) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Request too expensive",
+          message: `Estimated cost ($${estimatedMaxCost.toFixed(6)}) exceeds maximum ($${MAX_COST_PER_REQUEST.toFixed(6)})`,
+          estimatedCost: estimatedMaxCost,
+          maxCost: MAX_COST_PER_REQUEST
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
     const request_id = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2));

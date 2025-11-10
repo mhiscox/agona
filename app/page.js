@@ -81,6 +81,7 @@ export default function Home() {
     setActiveBids([]);
 
     // Simulate auction stages with delays (longer for YC partners to see)
+    // Stage 1: Classifying (2 seconds)
     setTimeout(() => {
       setAuctionStage('bidding');
       // Simulate bids coming in over a longer period
@@ -88,14 +89,15 @@ export default function Home() {
       models.forEach((model, idx) => {
         setTimeout(() => {
           setActiveBids(prev => [...prev, { model, price: (0.0001 + Math.random() * 0.0002).toFixed(6), score: 150 + Math.floor(Math.random() * 50) }]);
-        }, idx * 800); // Slower: 800ms between bids
+        }, idx * 1500); // Slower: 1.5s between bids for visibility
       });
-    }, 1200); // Start bidding after 1.2s
+    }, 2000); // Start bidding after 2s (classifying stage)
 
-    // Keep bidding stage visible longer (5 seconds total)
+    // Keep bidding stage visible longer (8+ seconds total)
+    // 2s (classifying) + 4.5s (3 bids at 1.5s intervals) + 2s buffer = 8.5s
     setTimeout(() => {
       setAuctionStage('processing');
-    }, 6000); // Switch to processing after 6 seconds (1.2s + 2.4s for bids + buffer)
+    }, 10000); // Switch to processing after 10 seconds total
 
     try {
       const response = await fetch('/api/bulk-query', {

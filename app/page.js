@@ -645,6 +645,36 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Model Characteristics Info */}
+            <div style={{ 
+              background: '#f0f7ff', 
+              padding: 16, 
+              borderRadius: 8, 
+              marginBottom: 16,
+              border: '1px solid #b3d9ff'
+            }}>
+              <h4 style={{ marginTop: 0, marginBottom: 12, fontSize: 14, fontWeight: 600, color: '#000' }}>
+                Model Characteristics:
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, fontSize: 12 }}>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#000', marginBottom: 4 }}>OpenAI GPT-4o-mini</div>
+                  <div style={{ color: '#666' }}>Quality: <span style={{ color: '#2e7d32', fontWeight: 600 }}>High</span></div>
+                  <div style={{ color: '#666' }}>Price: <span style={{ color: '#d32f2f', fontWeight: 600 }}>High</span></div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#000', marginBottom: 4 }}>Cloudflare Llama 3.1</div>
+                  <div style={{ color: '#666' }}>Quality: <span style={{ color: '#2e7d32', fontWeight: 600 }}>High</span></div>
+                  <div style={{ color: '#666' }}>Price: <span style={{ color: '#2e7d32', fontWeight: 600 }}>Low</span></div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#000', marginBottom: 4 }}>Cloudflare Mistral 7B</div>
+                  <div style={{ color: '#666' }}>Quality: <span style={{ color: '#f57c00', fontWeight: 600 }}>Medium</span></div>
+                  <div style={{ color: '#666' }}>Price: <span style={{ color: '#2e7d32', fontWeight: 600 }}>Low</span></div>
+                </div>
+              </div>
+            </div>
+
             {/* Results Table */}
             <div style={{ marginBottom: 16, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -652,10 +682,10 @@ export default function Home() {
                   <tr style={{ borderBottom: '2px solid #ddd', backgroundColor: '#f5f5f5' }}>
                     <th style={{ textAlign: 'left', padding: '10px', fontWeight: 600, color: '#000' }}>Prompt</th>
                     <th style={{ textAlign: 'center', padding: '10px', fontWeight: 600, color: '#000' }}>Tier</th>
-                    <th style={{ textAlign: 'center', padding: '10px', fontWeight: 600, color: '#000' }}>Priority</th>
                     <th style={{ textAlign: 'left', padding: '10px', fontWeight: 600, color: '#000' }}>Winner</th>
-                    <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Bids</th>
                     <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Price</th>
+                    <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Market Price</th>
+                    <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Savings</th>
                     <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Agona Cut</th>
                   </tr>
                 </thead>
@@ -663,6 +693,8 @@ export default function Home() {
                   {bulkResults.results.map((result, idx) => {
                     const tierColors = { low: '#c8e6c9', medium: '#fff9c4', high: '#ffccbc' };
                     const tierLabels = { low: 'Low', medium: 'Medium', high: 'High' };
+                    const qualityColors = { high: '#2e7d32', medium: '#f57c00', low: '#d32f2f' };
+                    const qualityLabels = { high: 'High', medium: 'Medium', low: 'Low' };
                     return (
                       <tr key={result.promptId} style={{ borderBottom: '1px solid #eee' }}>
                         <td style={{ padding: '10px', color: '#333', maxWidth: '200px' }}>
@@ -683,17 +715,28 @@ export default function Home() {
                             {tierLabels[result.tier]}
                           </span>
                         </td>
-                        <td style={{ textAlign: 'center', padding: '10px', color: '#666' }}>
-                          {result.priority}
+                        <td style={{ padding: '10px', color: '#000' }}>
+                          <div style={{ fontWeight: 500, marginBottom: 4 }}>{result.winner.modelName}</div>
+                          <div style={{ fontSize: 10, color: '#666', marginBottom: 2 }}>
+                            Quality: <span style={{ color: qualityColors[result.winner.quality], fontWeight: 600 }}>
+                              {qualityLabels[result.winner.quality]}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 10, color: '#666', fontStyle: 'italic' }}>
+                            {result.winner.rationale}
+                          </div>
                         </td>
-                        <td style={{ padding: '10px', color: '#000', fontWeight: 500 }}>
-                          {result.winner.modelName}
-                        </td>
-                        <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#666' }}>
-                          {result.allBids.length}
-                        </td>
-                        <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#666' }}>
+                        <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#000', fontWeight: 600 }}>
                           ${result.winner.price_usd.toFixed(6)}
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#666' }}>
+                          ${result.marketPrice.toFixed(6)}
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#2e7d32', fontWeight: 600 }}>
+                          ${result.savingsVsMarket.toFixed(6)}
+                          <div style={{ fontSize: 10, color: '#666' }}>
+                            ({result.savingsPct.toFixed(1)}%)
+                          </div>
                         </td>
                         <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#2e7d32', fontWeight: 600 }}>
                           ${result.agonaCut.toFixed(6)}
@@ -708,34 +751,100 @@ export default function Home() {
             {/* Bidding Details */}
             <details style={{ marginTop: 16 }}>
               <summary style={{ cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#0066cc', marginBottom: 8 }}>
-                View Bidding Details
+                View Detailed Bidding Process & Alternative Offers
               </summary>
-              <div style={{ marginTop: 12, fontSize: 12, background: '#f5f5f5', padding: 12, borderRadius: 8 }}>
-                {bulkResults.results.map((result) => (
-                  <div key={result.promptId} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #ddd' }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8, color: '#000' }}>{result.prompt}</div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {result.allBids.map((bid, idx) => (
-                        <div
-                          key={idx}
-                          style={{
-                            padding: '6px 10px',
-                            borderRadius: 6,
-                            backgroundColor: bid.modelId === result.winner.modelId ? '#c8e6c9' : '#fff',
-                            border: bid.modelId === result.winner.modelId ? '2px solid #4caf50' : '1px solid #ddd',
-                            fontSize: 11
-                          }}
-                        >
-                          <div style={{ fontWeight: 600, color: '#000' }}>{bid.modelName}</div>
-                          <div style={{ color: '#666', fontSize: 10 }}>Score: {bid.bidScore}</div>
-                          {bid.modelId === result.winner.modelId && (
-                            <div style={{ color: '#2e7d32', fontWeight: 600, fontSize: 10, marginTop: 2 }}>✓ Winner</div>
-                          )}
+              <div style={{ marginTop: 12, fontSize: 12, background: '#f5f5f5', padding: 16, borderRadius: 8 }}>
+                {bulkResults.results.map((result) => {
+                  const qualityColors = { high: '#2e7d32', medium: '#f57c00', low: '#d32f2f' };
+                  const qualityLabels = { high: 'High', medium: 'Medium', low: 'Low' };
+                  return (
+                    <div key={result.promptId} style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #ddd' }}>
+                      <div style={{ fontWeight: 600, marginBottom: 12, color: '#000', fontSize: 14 }}>
+                        {result.prompt}
+                      </div>
+                      
+                      {/* Winner Card */}
+                      <div style={{
+                        background: '#e8f5e9',
+                        padding: 12,
+                        borderRadius: 8,
+                        marginBottom: 12,
+                        border: '2px solid #4caf50'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <div>
+                            <div style={{ fontWeight: 600, color: '#000', fontSize: 13 }}>
+                              🏆 Winner: {result.winner.modelName}
+                            </div>
+                            <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
+                              Quality: <span style={{ color: qualityColors[result.winner.quality], fontWeight: 600 }}>
+                                {qualityLabels[result.winner.quality]}
+                              </span> | 
+                              Price: <span style={{ fontWeight: 600 }}>${result.winner.price_usd.toFixed(6)}</span>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 11, color: '#666' }}>Bid Score</div>
+                            <div style={{ fontSize: 16, fontWeight: 600, color: '#2e7d32' }}>{result.winner.bidScore}</div>
+                          </div>
                         </div>
-                      ))}
+                        <div style={{ fontSize: 11, color: '#333', fontStyle: 'italic', marginTop: 4 }}>
+                          Why chosen: {result.winner.rationale}
+                        </div>
+                        {result.savingsVsMarket > 0 && (
+                          <div style={{ marginTop: 8, padding: 8, background: '#fff', borderRadius: 4, fontSize: 11 }}>
+                            <div style={{ fontWeight: 600, color: '#000', marginBottom: 4 }}>💰 Savings vs Market:</div>
+                            <div style={{ color: '#2e7d32', fontWeight: 600 }}>
+                              Saved ${result.savingsVsMarket.toFixed(6)} ({result.savingsPct.toFixed(1)}%) compared to market price of ${result.marketPrice.toFixed(6)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Alternative Offers */}
+                      {result.alternativeBids && result.alternativeBids.length > 0 && (
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#000', marginBottom: 8, fontSize: 13 }}>
+                            Other Offers Received:
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            {result.alternativeBids.map((bid, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  padding: '10px',
+                                  borderRadius: 6,
+                                  backgroundColor: '#fff',
+                                  border: '1px solid #ddd',
+                                  fontSize: 11,
+                                  flex: '1 1 200px'
+                                }}
+                              >
+                                <div style={{ fontWeight: 600, color: '#000', marginBottom: 4 }}>{bid.modelName}</div>
+                                <div style={{ color: '#666', fontSize: 10, marginBottom: 2 }}>
+                                  Quality: <span style={{ color: qualityColors[bid.quality], fontWeight: 600 }}>
+                                    {qualityLabels[bid.quality]}
+                                  </span>
+                                </div>
+                                <div style={{ color: '#666', fontSize: 10, marginBottom: 2 }}>
+                                  Price: <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>${bid.estimatedPrice.toFixed(6)}</span>
+                                </div>
+                                <div style={{ color: '#666', fontSize: 10, fontStyle: 'italic', marginTop: 4 }}>
+                                  {bid.rationale}
+                                </div>
+                                {bid.estimatedPrice > result.winner.price_usd && (
+                                  <div style={{ marginTop: 6, padding: 4, background: '#fff3cd', borderRadius: 4, fontSize: 10, color: '#856404' }}>
+                                    +${(bid.estimatedPrice - result.winner.price_usd).toFixed(6)} more expensive
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </details>
           </div>

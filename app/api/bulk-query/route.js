@@ -88,31 +88,54 @@ function shouldBid(modelId, prompt, tier) {
   return true;
 }
 
-// Calculate bid score (models use this to determine their bid)
+// Get model characteristics
+function getModelCharacteristics(modelId) {
+  if (modelId.startsWith("openai:")) {
+    return { quality: "high", priceTier: "high", name: "OpenAI GPT-4o-mini" };
+  } else if (modelId.includes("llama")) {
+    return { quality: "high", priceTier: "low", name: "Cloudflare Llama 3.1" };
+  } else if (modelId.includes("mistral")) {
+    return { quality: "medium", priceTier: "low", name: "Cloudflare Mistral 7B" };
+  }
+  return { quality: "medium", priceTier: "medium", name: "Unknown" };
+}
+
+// Calculate bid score and rationale
 function calculateBidScore(modelId, prompt, tier, estimatedPrice, estimatedLatency) {
+  const chars = getModelCharacteristics(modelId);
   let score = 0;
+  const rationale = [];
   
   // Base score from model capabilities
-  if (modelId.startsWith("openai:")) {
-    score += 100; // Premium model
-  } else if (modelId.startsWith("cf:")) {
-    score += 70; // Cost-effective model
+  if (chars.quality === "high") {
+    score += chars.priceTier === "high" ? 100 : 90; // High quality models
+    rationale.push("High quality model");
+  } else {
+    score += 60; // Medium quality
+    rationale.push("Good quality model");
+  }
+  
+  // Price competitiveness (lower price = higher score)
+  const priceScore = Math.max(0, 50 - (estimatedPrice * 100000));
+  score += priceScore;
+  if (chars.priceTier === "low") {
+    rationale.push("Competitive pricing");
+  }
+  
+  // Latency bonus (faster = higher score)
+  const latencyScore = Math.max(0, 30 - (estimatedLatency / 100));
+  score += latencyScore;
+  if (estimatedLatency < 500) {
+    rationale.push("Fast response time");
   }
   
   // Adjust for tier preference
   if (modelId.startsWith("cf:") && (tier === "low" || tier === "medium")) {
-    score += 20; // CF models prefer simpler prompts
+    score += 20;
+    rationale.push("Optimized for this complexity");
   }
   
-  // Price competitiveness (lower price = higher score)
-  const priceScore = Math.max(0, 50 - (estimatedPrice * 100000)); // Scale price to score
-  score += priceScore;
-  
-  // Latency bonus (faster = higher score)
-  const latencyScore = Math.max(0, 30 - (estimatedLatency / 100)); // Scale latency to score
-  score += latencyScore;
-  
-  return Math.round(score);
+  return { score: Math.round(score), rationale: rationale.join(", ") };
 }
 
 async function timed(fn) {
@@ -289,9 +312,30 @@ export async function POST(req) {
 
     // Step 2: Models bid on prompts they want to handle
     const allModels = [
-      { id: "openai:gpt-4o-mini", name: "OpenAI GPT-4o-mini", callFn: callOpenAI },
-      { id: "cf:llama-3.1-8b-instruct", name: "Cloudflare Llama 3.1", callFn: callCloudflarePrimary },
-      { id: "cf:mistral-7b-instruct-v0.1", name: "Cloudflare Mistral 7B", callFn: callCloudflareAlt },
+      { 
+        id: "openai:gpt-4o-mini", 
+        name: "OpenAI GPT-4o-mini", 
+        callFn: callOpenAI,
+        quality: "high",
+        priceTier: "high",
+        description: "Premium quality, highest price"
+      },
+      { 
+        id: "cf:llama-3.1-8b-instruct", 
+        name: "Cloudflare Llama 3.1", 
+        callFn: callCloudflarePrimary,
+        quality: "high",
+        priceTier: "low",
+        description: "High quality, competitive price"
+      },
+      { 
+        id: "cf:mistral-7b-instruct-v0.1", 
+        name: "Cloudflare Mistral 7B", 
+        callFn: callCloudflareAlt,
+        quality: "medium",
+        priceTier: "low",
+        description: "Good quality, lowest price"
+      },
     ];
 
     const bids = [];
@@ -309,14 +353,18 @@ export async function POST(req) {
           const estimatedPrice = estimatePriceUSD(model.id, estimatedTokens, estimatedTokens * 2);
           const estimatedLatency = model.id.startsWith("openai:") ? 800 : 400; // Rough estimates
           
-          const bidScore = calculateBidScore(model.id, promptData.text, promptData.tier, estimatedPrice, estimatedLatency);
+          const bidResult = calculateBidScore(model.id, promptData.text, promptData.tier, estimatedPrice, estimatedLatency);
           
           promptBids.push({
             modelId: model.id,
             modelName: model.name,
-            bidScore,
+            bidScore: bidResult.score,
             estimatedPrice,
             estimatedLatency,
+            rationale: bidResult.rationale,
+            quality: model.quality,
+            priceTier: model.priceTier,
+            description: model.description,
           });
         }
       }
@@ -337,6 +385,18 @@ export async function POST(req) {
           const agonaCut = round6(actualPrice * AGONA_CUT_PCT);
           const modelRevenue = round6(actualPrice - agonaCut);
 
+          // Calculate market price (most expensive bid) and savings
+          const marketPrice = promptBids.length > 0 
+            ? Math.max(...promptBids.map(b => b.estimatedPrice))
+            : actualPrice;
+          const savingsVsMarket = round6(Math.max(0, marketPrice - actualPrice));
+          const savingsPct = marketPrice > 0 ? round6((savingsVsMarket / marketPrice) * 100) : 0;
+
+          // Find alternative offers (other bids)
+          const alternativeBids = promptBids
+            .filter(b => b.modelId !== winningBid.modelId)
+            .sort((a, b) => a.estimatedPrice - b.estimatedPrice);
+
           results.push({
             promptId: promptData.id,
             prompt: promptData.text,
@@ -349,10 +409,26 @@ export async function POST(req) {
               latency_ms: response.latency_ms || 0,
               price_usd: actualPrice,
               bidScore: winningBid.bidScore,
+              rationale: winningBid.rationale,
+              quality: model.quality,
+              priceTier: model.priceTier,
             },
-            allBids: promptBids,
+            allBids: promptBids.map(b => ({
+              ...b,
+              actualPrice: b.modelId === winningBid.modelId ? actualPrice : null,
+            })),
             agonaCut,
             modelRevenue,
+            marketPrice,
+            savingsVsMarket,
+            savingsPct,
+            alternativeBids: alternativeBids.map(b => ({
+              modelName: b.modelName,
+              estimatedPrice: b.estimatedPrice,
+              quality: b.quality,
+              priceTier: b.priceTier,
+              rationale: b.rationale,
+            })),
           });
 
           bids.push({

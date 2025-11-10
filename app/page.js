@@ -67,10 +67,10 @@ export default function Home() {
   // Sample bulk prompts from customers (shown upfront)
   const samplePrompts = [
     "How much did companies spend on AI API calls last year?",
+    "How many large language models are currently available in production, and what are the key differences between the major providers?",
     "Summarize this meeting: discussed Q4 goals, hiring plans, and product roadmap.",
     "Write a professional email to request a refund for order #12345",
     "Explain quantum computing in simple terms",
-    "Translate 'Hello, how are you?' to Spanish",
   ];
 
   const runBulkDemo = async () => {

@@ -16,6 +16,11 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  // Bulk marketplace demo state
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkResults, setBulkResults] = useState(null);
+  const [bulkError, setBulkError] = useState(null);
+
   const promptChips = [
     'What does Agona do?',
     'Draft a 2-sentence refund email',
@@ -54,6 +59,40 @@ export default function Home() {
       setError('Failed to fetch results. Make sure environment variables are configured.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runBulkDemo = async () => {
+    // Sample bulk prompts from customers
+    const samplePrompts = [
+      "What is the weather today?",
+      "Summarize this meeting: discussed Q4 goals, hiring plans, and product roadmap.",
+      "Write a professional email to request a refund for order #12345",
+      "Explain quantum computing in simple terms",
+      "Translate 'Hello, how are you?' to Spanish",
+    ];
+
+    setBulkLoading(true);
+    setBulkError(null);
+    setBulkResults(null);
+
+    try {
+      const response = await fetch('/api/bulk-query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompts: samplePrompts }),
+      });
+      const data = await response.json();
+
+      if (data.error) {
+        setBulkError(data.error);
+      } else {
+        setBulkResults(data);
+      }
+    } catch (err) {
+      setBulkError('Failed to fetch results. Make sure environment variables are configured.');
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -354,6 +393,189 @@ export default function Home() {
             >
               {copied ? '✓ Copied!' : 'Copy curl'}
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Bulk Marketplace Demo */}
+      <div style={{
+        background: '#f9f9f9',
+        padding: 24,
+        borderRadius: 12,
+        marginBottom: 32,
+        border: '1px solid #e0e0e0'
+      }}>
+        <h2 style={{ fontSize: 'clamp(20px, 5vw, 24px)', marginTop: 0, marginBottom: 8, color: '#000' }}>
+          Marketplace Demo: Bulk Prompts with Bidding
+        </h2>
+        <p style={{ fontSize: 14, color: '#666', marginBottom: 16 }}>
+          This demo shows how Agona works in production: API consumers send bulk prompts, Agona classifies them into tiers, 
+          models bid on prompts they want to handle, and Agona takes a 5% platform fee from each successful match.
+        </p>
+
+        <button
+          onClick={runBulkDemo}
+          disabled={bulkLoading}
+          style={{
+            padding: '12px 24px',
+            fontSize: 16,
+            backgroundColor: bulkLoading ? '#ccc' : '#0066cc',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            cursor: bulkLoading ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            marginBottom: 16
+          }}
+        >
+          {bulkLoading ? 'Processing bulk prompts...' : 'Run Marketplace Demo'}
+        </button>
+
+        {bulkError && (
+          <div style={{
+            padding: 12,
+            background: '#fee',
+            color: '#c00',
+            borderRadius: 8,
+            marginBottom: 16,
+            fontSize: 14
+          }}>
+            {bulkError}
+          </div>
+        )}
+
+        {bulkLoading && (
+          <div style={{ textAlign: 'center', padding: 24, color: '#666', fontSize: 14 }}>
+            <p>📊 Classifying prompts into tiers...</p>
+            <p style={{ marginTop: 8 }}>💰 Models are bidding on prompts...</p>
+            <p style={{ marginTop: 8 }}>⚡ Processing winning bids...</p>
+          </div>
+        )}
+
+        {bulkResults && !bulkLoading && (
+          <div>
+            {/* Summary Card */}
+            <div style={{
+              background: '#e3f2fd',
+              padding: 16,
+              borderRadius: 8,
+              marginBottom: 16,
+              border: '1px solid #90caf9'
+            }}>
+              <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 18, color: '#000' }}>Marketplace Summary</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, fontSize: 14 }}>
+                <div>
+                  <div style={{ color: '#666', fontSize: 12 }}>Total Prompts</div>
+                  <div style={{ color: '#000', fontWeight: 600, fontSize: 20 }}>{bulkResults.summary.totalPrompts}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#666', fontSize: 12 }}>Total Cost</div>
+                  <div style={{ color: '#000', fontWeight: 600, fontSize: 20 }}>${bulkResults.summary.totalCost.toFixed(6)}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#666', fontSize: 12 }}>Agona Revenue</div>
+                  <div style={{ color: '#2e7d32', fontWeight: 600, fontSize: 20 }}>${bulkResults.summary.agonaRevenue.toFixed(6)}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#666', fontSize: 12 }}>Model Revenue</div>
+                  <div style={{ color: '#1976d2', fontWeight: 600, fontSize: 20 }}>${bulkResults.summary.modelRevenue.toFixed(6)}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Results Table */}
+            <div style={{ marginBottom: 16, overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #ddd', backgroundColor: '#f5f5f5' }}>
+                    <th style={{ textAlign: 'left', padding: '10px', fontWeight: 600, color: '#000' }}>Prompt</th>
+                    <th style={{ textAlign: 'center', padding: '10px', fontWeight: 600, color: '#000' }}>Tier</th>
+                    <th style={{ textAlign: 'center', padding: '10px', fontWeight: 600, color: '#000' }}>Priority</th>
+                    <th style={{ textAlign: 'left', padding: '10px', fontWeight: 600, color: '#000' }}>Winner</th>
+                    <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Bids</th>
+                    <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Price</th>
+                    <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Agona Cut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bulkResults.results.map((result, idx) => {
+                    const tierColors = { low: '#c8e6c9', medium: '#fff9c4', high: '#ffccbc' };
+                    const tierLabels = { low: 'Low', medium: 'Medium', high: 'High' };
+                    return (
+                      <tr key={result.promptId} style={{ borderBottom: '1px solid #eee' }}>
+                        <td style={{ padding: '10px', color: '#333', maxWidth: '200px' }}>
+                          <div style={{ fontWeight: 500, marginBottom: 4 }}>{result.prompt}</div>
+                          <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                            {result.winner.answer.substring(0, 60)}...
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '10px' }}>
+                          <span style={{
+                            padding: '4px 8px',
+                            borderRadius: 4,
+                            backgroundColor: tierColors[result.tier],
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: '#333'
+                          }}>
+                            {tierLabels[result.tier]}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '10px', color: '#666' }}>
+                          {result.priority}
+                        </td>
+                        <td style={{ padding: '10px', color: '#000', fontWeight: 500 }}>
+                          {result.winner.modelName}
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#666' }}>
+                          {result.allBids.length}
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#666' }}>
+                          ${result.winner.price_usd.toFixed(6)}
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '10px', fontFamily: 'monospace', color: '#2e7d32', fontWeight: 600 }}>
+                          ${result.agonaCut.toFixed(6)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Bidding Details */}
+            <details style={{ marginTop: 16 }}>
+              <summary style={{ cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#0066cc', marginBottom: 8 }}>
+                View Bidding Details
+              </summary>
+              <div style={{ marginTop: 12, fontSize: 12, background: '#f5f5f5', padding: 12, borderRadius: 8 }}>
+                {bulkResults.results.map((result) => (
+                  <div key={result.promptId} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #ddd' }}>
+                    <div style={{ fontWeight: 600, marginBottom: 8, color: '#000' }}>{result.prompt}</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {result.allBids.map((bid, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: 6,
+                            backgroundColor: bid.modelId === result.winner.modelId ? '#c8e6c9' : '#fff',
+                            border: bid.modelId === result.winner.modelId ? '2px solid #4caf50' : '1px solid #ddd',
+                            fontSize: 11
+                          }}
+                        >
+                          <div style={{ fontWeight: 600, color: '#000' }}>{bid.modelName}</div>
+                          <div style={{ color: '#666', fontSize: 10 }}>Score: {bid.bidScore}</div>
+                          {bid.modelId === result.winner.modelId && (
+                            <div style={{ color: '#2e7d32', fontWeight: 600, fontSize: 10, marginTop: 2 }}>✓ Winner</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
           </div>
         )}
       </div>

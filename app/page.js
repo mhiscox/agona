@@ -66,7 +66,7 @@ export default function Home() {
 
   // Sample bulk prompts from customers (shown upfront)
   const samplePrompts = [
-    "What is the weather today?",
+    "What are the key benefits of using a microservices architecture?",
     "Summarize this meeting: discussed Q4 goals, hiring plans, and product roadmap.",
     "Write a professional email to request a refund for order #12345",
     "Explain quantum computing in simple terms",

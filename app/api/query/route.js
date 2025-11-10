@@ -247,10 +247,33 @@ async function callCloudflareAlt(prompt) {
 }
 
 /* ========= ROUTES ========= */
-export async function GET() {
-  return new Response(JSON.stringify({ ok: true, method: "GET", t: new Date().toISOString() }), {
-    headers: { "Content-Type": "application/json" },
-  });
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const prompt = searchParams.get("prompt") || "In one sentence, what does Agona do?";
+    
+    // Reuse POST logic by creating a mock request
+    const mockReq = new Request(req.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
+    
+    return await POST(mockReq);
+  } catch (err) {
+    console.error("GET handler error:", err);
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    return new Response(
+      JSON.stringify({ 
+        error: "Server error", 
+        ...(isDevelopment && { details: String(err) })
+      }), 
+      {
+        headers: { "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
 }
 
 export async function POST(req) {

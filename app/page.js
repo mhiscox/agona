@@ -62,15 +62,16 @@ export default function Home() {
     }
   };
 
+  // Sample bulk prompts from customers (shown upfront)
+  const samplePrompts = [
+    "What is the weather today?",
+    "Summarize this meeting: discussed Q4 goals, hiring plans, and product roadmap.",
+    "Write a professional email to request a refund for order #12345",
+    "Explain quantum computing in simple terms",
+    "Translate 'Hello, how are you?' to Spanish",
+  ];
+
   const runBulkDemo = async () => {
-    // Sample bulk prompts from customers
-    const samplePrompts = [
-      "What is the weather today?",
-      "Summarize this meeting: discussed Q4 goals, hiring plans, and product roadmap.",
-      "Write a professional email to request a refund for order #12345",
-      "Explain quantum computing in simple terms",
-      "Translate 'Hello, how are you?' to Spanish",
-    ];
 
     setBulkLoading(true);
     setBulkError(null);
@@ -408,10 +409,40 @@ export default function Home() {
         <h2 style={{ fontSize: 'clamp(20px, 5vw, 24px)', marginTop: 0, marginBottom: 8, color: '#000' }}>
           Marketplace Demo: Bulk Prompts with Bidding
         </h2>
-        <p style={{ fontSize: 14, color: '#666', marginBottom: 16 }}>
+        <p style={{ fontSize: 14, color: '#666', marginBottom: 20 }}>
           This demo shows how Agona works in production: API consumers send bulk prompts, Agona classifies them into tiers, 
           models bid on prompts they want to handle, and Agona takes a 5% platform fee from each successful match.
         </p>
+
+        {/* Show prompts upfront */}
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: 16, marginBottom: 12, color: '#000', fontWeight: 600 }}>
+            📋 Bulk Prompts from API Consumers:
+          </h3>
+          <div style={{ 
+            background: '#fff', 
+            padding: 16, 
+            borderRadius: 8, 
+            border: '1px solid #ddd',
+            marginBottom: 16
+          }}>
+            {samplePrompts.map((prompt, idx) => (
+              <div 
+                key={idx}
+                style={{
+                  padding: '10px',
+                  marginBottom: idx < samplePrompts.length - 1 ? 8 : 0,
+                  borderBottom: idx < samplePrompts.length - 1 ? '1px solid #eee' : 'none',
+                  fontSize: 14,
+                  color: '#333'
+                }}
+              >
+                <span style={{ color: '#666', marginRight: 8, fontWeight: 600 }}>#{idx + 1}</span>
+                {prompt}
+              </div>
+            ))}
+          </div>
+        </div>
 
         <button
           onClick={runBulkDemo}
@@ -425,10 +456,11 @@ export default function Home() {
             borderRadius: 8,
             cursor: bulkLoading ? 'not-allowed' : 'pointer',
             fontWeight: 600,
-            marginBottom: 16
+            marginBottom: 16,
+            width: '100%'
           }}
         >
-          {bulkLoading ? 'Processing bulk prompts...' : 'Run Marketplace Demo'}
+          {bulkLoading ? 'Processing bulk prompts...' : '🚀 Run Marketplace Demo'}
         </button>
 
         {bulkError && (
@@ -445,10 +477,140 @@ export default function Home() {
         )}
 
         {bulkLoading && (
-          <div style={{ textAlign: 'center', padding: 24, color: '#666', fontSize: 14 }}>
-            <p>📊 Classifying prompts into tiers...</p>
-            <p style={{ marginTop: 8 }}>💰 Models are bidding on prompts...</p>
-            <p style={{ marginTop: 8 }}>⚡ Processing winning bids...</p>
+          <div style={{ 
+            background: '#fff', 
+            padding: 24, 
+            borderRadius: 8, 
+            border: '2px solid #0066cc',
+            marginTop: 16
+          }}>
+            {/* Visual Flow */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12
+              }}>
+                {/* Step 1: Prompts */}
+                <div style={{ textAlign: 'center', flex: '1 1 120px' }}>
+                  <div style={{ 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: '50%', 
+                    background: '#e3f2fd', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    margin: '0 auto 8px',
+                    border: '2px solid #1976d2',
+                    fontSize: 24
+                  }}>
+                    📋
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>Prompts</div>
+                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>5 requests</div>
+                </div>
+
+                {/* Arrow */}
+                <div style={{ fontSize: 24, color: '#0066cc', flex: '0 0 auto' }}>→</div>
+
+                {/* Step 2: Agona Processing */}
+                <div style={{ textAlign: 'center', flex: '1 1 120px' }}>
+                  <div style={{ 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: '50%', 
+                    background: '#fff3e0', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    margin: '0 auto 8px',
+                    border: '2px solid #f57c00',
+                    fontSize: 24,
+                    animation: 'pulse 2s infinite'
+                  }}>
+                    ⚙️
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>Agona</div>
+                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Classifying...</div>
+                </div>
+
+                {/* Arrow */}
+                <div style={{ fontSize: 24, color: '#0066cc', flex: '0 0 auto' }}>→</div>
+
+                {/* Step 3: Bidding */}
+                <div style={{ textAlign: 'center', flex: '1 1 120px' }}>
+                  <div style={{ 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: '50%', 
+                    background: '#f3e5f5', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    margin: '0 auto 8px',
+                    border: '2px solid #7b1fa2',
+                    fontSize: 24
+                  }}>
+                    💰
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>Bidding</div>
+                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Models competing...</div>
+                </div>
+
+                {/* Arrow */}
+                <div style={{ fontSize: 24, color: '#0066cc', flex: '0 0 auto' }}>→</div>
+
+                {/* Step 4: Results */}
+                <div style={{ textAlign: 'center', flex: '1 1 120px' }}>
+                  <div style={{ 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: '50%', 
+                    background: '#e8f5e9', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    margin: '0 auto 8px',
+                    border: '2px solid #388e3c',
+                    fontSize: 24,
+                    opacity: 0.5
+                  }}>
+                    ✅
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>Results</div>
+                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Processing...</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Messages */}
+            <div style={{ 
+              background: '#f5f5f5', 
+              padding: 16, 
+              borderRadius: 8,
+              fontSize: 13,
+              color: '#333'
+            }}>
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 16 }}>📊</span>
+                <span>Classifying prompts into tiers (Low/Medium/High complexity)...</span>
+              </div>
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 16 }}>🔍</span>
+                <span>Analyzing prompt characteristics and requirements...</span>
+              </div>
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 16 }}>💰</span>
+                <span>Models calculating bids based on price, latency, and capabilities...</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 16 }}>⚡</span>
+                <span>Processing winning bids and generating responses...</span>
+              </div>
+            </div>
           </div>
         )}
 

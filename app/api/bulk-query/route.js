@@ -55,7 +55,8 @@ const PRICES = {
 };
 
 const TIMEOUT_MS = Number(PROVIDER_TIMEOUT_MS) || 8000;
-const AGONA_CUT_PCT = 0.05; // 5% platform fee
+const AGONA_CUT_PCT = 0.05; // 5% platform fee (on price)
+const AGONA_SAVINGS_CUT_PCT = 0.20; // 20% of savings goes to Agona
 
 function approxTokens(s = "") { return Math.ceil(s.length / 4); }
 function round6(n) { return n == null ? n : +n.toFixed(6); }
@@ -467,12 +468,6 @@ export async function POST(req) {
           const priceRange = basePriceRange.max - basePriceRange.min;
           const actualPrice = round6(basePriceRange.min + (priceRange * totalFactor));
           
-          // Calculate Agona cut (5% of price, with small variation ±1%)
-          const agonaCutVariation = 1 + (Math.random() * 0.02 - 0.01); // 0.99 to 1.01
-          const agonaCutBase = actualPrice * AGONA_CUT_PCT * agonaCutVariation;
-          const agonaCut = round6(Math.max(agonaCutBase, 0.00001));
-          const modelRevenue = round6(actualPrice - agonaCut);
-
           // Calculate market price (most expensive bid) and savings
           // First, determine the baseline market price from bids
           const allBidPrices = promptBids.map(b => b.estimatedPrice);
@@ -511,6 +506,22 @@ export async function POST(req) {
             savingsVsMarket = round6(Math.max(0.000001, savingsVsMarket * savingsVariation));
             savingsPct = marketPrice > 0 ? round6((savingsVsMarket / marketPrice) * 100) : savingsPct;
           }
+          
+          // Calculate Agona cut as % of savings (20% of savings)
+          // Also ensure minimum cut based on price (5% of price) as fallback
+          let agonaCut;
+          if (savingsVsMarket > 0) {
+            const savingsBasedCut = round6(savingsVsMarket * AGONA_SAVINGS_CUT_PCT);
+            const priceBasedCut = round6(actualPrice * AGONA_CUT_PCT);
+            // Use the higher of the two (ensures meaningful cut)
+            agonaCut = round6(Math.max(savingsBasedCut, priceBasedCut * 0.5)); // At least 50% of price-based cut
+          } else {
+            // Fallback to price-based if no savings
+            const agonaCutVariation = 1 + (Math.random() * 0.02 - 0.01); // 0.99 to 1.01
+            agonaCut = round6(Math.max(actualPrice * AGONA_CUT_PCT * agonaCutVariation, 0.00001));
+          }
+          
+          const modelRevenue = round6(actualPrice - agonaCut);
 
           // Find alternative offers (other bids)
           const alternativeBids = promptBids
@@ -576,6 +587,7 @@ export async function POST(req) {
           agonaRevenue: totalAgonaRevenue,
           modelRevenue: totalModelRevenue,
           agonaCutPct: AGONA_CUT_PCT * 100,
+          agonaSavingsCutPct: AGONA_SAVINGS_CUT_PCT * 100,
         },
       }),
       { headers: { "Content-Type": "application/json" } }

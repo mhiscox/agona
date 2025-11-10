@@ -80,21 +80,22 @@ export default function Home() {
     setAuctionStage('classifying');
     setActiveBids([]);
 
-    // Simulate auction stages with delays
+    // Simulate auction stages with delays (longer for YC partners to see)
     setTimeout(() => {
       setAuctionStage('bidding');
-      // Simulate bids coming in
+      // Simulate bids coming in over a longer period
       const models = ['OpenAI GPT-4o-mini', 'Cloudflare Llama 3.1', 'Cloudflare Mistral 7B'];
       models.forEach((model, idx) => {
         setTimeout(() => {
           setActiveBids(prev => [...prev, { model, price: (0.0001 + Math.random() * 0.0002).toFixed(6), score: 150 + Math.floor(Math.random() * 50) }]);
-        }, idx * 300);
+        }, idx * 800); // Slower: 800ms between bids
       });
-    }, 800);
+    }, 1200); // Start bidding after 1.2s
 
+    // Keep bidding stage visible longer (5 seconds total)
     setTimeout(() => {
       setAuctionStage('processing');
-    }, 2000);
+    }, 6000); // Switch to processing after 6 seconds (1.2s + 2.4s for bids + buffer)
 
     try {
       const response = await fetch('/api/bulk-query', {

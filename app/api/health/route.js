@@ -1,3 +1,6 @@
 export async function GET() {
-  return Response.json({ ok: true, route: "app/api/health" });
+  return new Response(
+    JSON.stringify({ ok: true, service: "health", t: new Date().toISOString() }),
+    { headers: { "Content-Type": "application/json" } }
+  );
 }

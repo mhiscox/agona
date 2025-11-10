@@ -74,7 +74,20 @@ async function timed(fn) {
   return { ...res, latency_ms: Date.now() - t0 };
 }
 
-function onBrand(text = "") {
+function onBrand(text = "", prompt = "") {
+  // Only apply brand filter if prompt is asking about Agona/LLMs
+  const promptLower = prompt.toLowerCase();
+  const isAgonaPrompt = promptLower.includes("agona") || 
+                        promptLower.includes("what does") || 
+                        promptLower.includes("llm") ||
+                        promptLower.includes("language model");
+  
+  if (!isAgonaPrompt) {
+    // For non-Agona prompts, accept any non-empty response
+    return text.trim().length > 0;
+  }
+  
+  // For Agona prompts, check if answer is on-brand
   const s = text.toLowerCase();
   const must = s.includes("llm") || s.includes("language model") || s.includes("model");
   const hits = ["price", "latency", "quality", "cost", "speed"].filter((k) => s.includes(k)).length;
@@ -410,7 +423,7 @@ export async function POST(req) {
     // price estimate, brand filter, scoring
     for (const c of candidates) {
       c.price_usd = round6(estimatePriceUSD(c.id, approxTokens(prompt), approxTokens(c.answer)));
-      if (!onBrand(c.answer)) c.ok = false;
+      if (!onBrand(c.answer, prompt)) c.ok = false;
       c.score = score(c);
     }
 

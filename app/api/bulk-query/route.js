@@ -442,9 +442,26 @@ export async function POST(req) {
           const outputTokens = approxTokens(response.answer || "");
           const basePrice = estimatePriceUSD(model.id, inputTokens, outputTokens);
           
-          // Add variation to actual price (±15% to make it more realistic)
-          const priceVariationFactor = 1 + (Math.random() * 0.3 - 0.15); // 0.85 to 1.15
-          const variedPrice = basePrice * priceVariationFactor;
+          // Add significant variation to actual price based on multiple factors:
+          // 1. Random variation (±25%)
+          const randomVariation = 1 + (Math.random() * 0.5 - 0.25); // 0.75 to 1.25
+          
+          // 2. Response length variation (longer responses cost more)
+          const responseLengthFactor = 1 + ((response.answer?.length || 0) % 100) / 500; // 0-0.2 variation
+          
+          // 3. Prompt-specific variation (based on prompt index and length)
+          const promptSpecificFactor = 1 + ((promptData.text.length + idx * 17) % 50) / 250; // 0-0.2 variation
+          
+          // 4. Model-specific variation (different models have different pricing patterns)
+          const modelVariation = model.id.startsWith("openai:") 
+            ? 1 + (Math.random() * 0.1) // OpenAI: +0-10%
+            : model.id.includes("llama")
+            ? 1 + (Math.random() * 0.15 - 0.05) // Llama: -5% to +10%
+            : 1 + (Math.random() * 0.2 - 0.1); // Mistral: -10% to +10%
+          
+          // Combine all variations
+          const totalVariation = randomVariation * (1 + responseLengthFactor) * (1 + promptSpecificFactor) * modelVariation;
+          const variedPrice = basePrice * totalVariation;
           
           // Ensure minimum price to make Agona cut meaningful (at least $0.0001)
           const minPrice = 0.0001;

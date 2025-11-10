@@ -106,21 +106,25 @@ export default function Home() {
       <div style={{background:"#f5f5f5",padding:24,borderRadius:12,marginBottom:32,color:"#1a1a1a"}}>
         <h2 style={{fontSize:"clamp(20px, 5vw, 24px)",marginTop:0,marginBottom:16,color:"#000"}}>How it works</h2>
         <ol style={{margin:0,paddingLeft:20,color:"#333"}}>
-          <li style={{marginBottom:12}}>You send a single API request with your prompt</li>
-          <li style={{marginBottom:12}}>Agona sends it to multiple LLM providers simultaneously (OpenAI, Cloudflare Workers AI, etc.)</li>
-          <li style={{marginBottom:12}}>Each provider responds with their answer, price, and latency</li>
-          <li style={{marginBottom:12}}>Agona picks the best response based on <strong>price, latency, and quality</strong></li>
-          <li>You get the winning answer and see how much you saved vs. other options</li>
+          <li style={{marginBottom:12}}>You send one API request with your prompt.</li>
+          <li style={{marginBottom:12}}>Agona fans it out to multiple LLM providers in real time (e.g. OpenAI, Cloudflare Workers AI, Anthropic, etc).</li>
+          <li style={{marginBottom:12}}>Each model returns its answer, price, and latency.</li>
+          <li style={{marginBottom:12}}>Agona ranks the responses by quality, speed, and cost.</li>
+          <li style={{marginBottom:12}}>You get the best-performing answer — and see what you saved compared to other models.</li>
         </ol>
+        <p style={{marginTop:16,marginBottom:0,color:"#666",fontStyle:"italic",fontSize:14}}>
+          (Think "load balancer meets price auction" for AI models.)
+        </p>
       </div>
 
       <div style={{marginBottom:32,color:"#1a1a1a"}}>
-        <h2 style={{fontSize:"clamp(20px, 5vw, 24px)",marginBottom:16,color:"#000"}}>Why use Agona?</h2>
+        <h2 style={{fontSize:"clamp(20px, 5vw, 24px)",marginBottom:16,color:"#000"}}>Why use Agona</h2>
         <ul style={{margin:0,paddingLeft:20,color:"#333"}}>
-          <li style={{marginBottom:8}}><strong>Save money:</strong> Automatically picks the cheapest provider that meets quality standards</li>
-          <li style={{marginBottom:8}}><strong>Faster responses:</strong> Uses the fastest available model when quality is comparable</li>
-          <li style={{marginBottom:8}}><strong>Better quality:</strong> Compares responses and selects the best one</li>
-          <li><strong>One API:</strong> No need to manage multiple provider accounts or compare prices manually</li>
+          <li style={{marginBottom:8}}><strong>Cheaper:</strong> Automatically routes to the lowest-cost model that meets quality thresholds.</li>
+          <li style={{marginBottom:8}}><strong>Faster:</strong> Chooses the quickest model when quality is comparable.</li>
+          <li style={{marginBottom:8}}><strong>Smarter:</strong> Scores responses to pick the best balance of price, latency, and accuracy.</li>
+          <li style={{marginBottom:8}}><strong>Simpler:</strong> One API — no need to manage accounts or monitor multiple providers.</li>
+          <li><strong>Transparent:</strong> Every query shows what each model charged, how fast it was, and why one won.</li>
         </ul>
       </div>
 

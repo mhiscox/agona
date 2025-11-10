@@ -296,9 +296,17 @@ export async function POST(req) {
     );
   } catch (err) {
     console.error("API error:", err);
-    return new Response(JSON.stringify({ error: "Server error", details: String(err) }), {
-      headers: { "Content-Type": "application/json" },
-      status: 500,
-    });
+    // Don't expose internal error details in production
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    return new Response(
+      JSON.stringify({ 
+        error: "Server error", 
+        ...(isDevelopment && { details: String(err) })
+      }), 
+      {
+        headers: { "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 }

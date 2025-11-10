@@ -438,34 +438,32 @@ export async function POST(req) {
         if (model) {
           const response = await model.callFn(promptData.text);
           
-          const inputTokens = approxTokens(promptData.text);
-          const outputTokens = approxTokens(response.answer || "");
-          const basePrice = estimatePriceUSD(model.id, inputTokens, outputTokens);
+          // Generate demo price directly (ignore actual LLM response prices)
+          // Base price ranges by model
+          let basePriceRange;
+          if (model.id.startsWith("openai:")) {
+            basePriceRange = { min: 0.00015, max: 0.00035 }; // OpenAI: higher price range
+          } else if (model.id.includes("llama")) {
+            basePriceRange = { min: 0.00008, max: 0.00018 }; // Llama: medium price range
+          } else {
+            basePriceRange = { min: 0.00005, max: 0.00012 }; // Mistral: lower price range
+          }
           
-          // Add significant variation to actual price based on multiple factors:
-          // 1. Random variation (±25%)
-          const randomVariation = 1 + (Math.random() * 0.5 - 0.25); // 0.75 to 1.25
+          // Generate unique price for this prompt based on:
+          // 1. Model base range
+          // 2. Prompt index (ensures different price per prompt)
+          // 3. Prompt length (longer prompts = slightly higher)
+          // 4. Tier (high tier = higher price)
+          // 5. Random variation
           
-          // 2. Response length variation (longer responses cost more)
-          const responseLengthFactor = 1 + ((response.answer?.length || 0) % 100) / 500; // 0-0.2 variation
+          const promptIndexFactor = (idx * 0.3) % 1; // 0-1 based on index
+          const promptLengthFactor = Math.min(0.3, promptData.text.length / 500); // 0-0.3 based on length
+          const tierFactor = promptData.tier === "high" ? 0.2 : promptData.tier === "medium" ? 0.1 : 0;
+          const randomFactor = Math.random() * 0.2; // 0-0.2 random
           
-          // 3. Prompt-specific variation (based on prompt index and length)
-          const promptSpecificFactor = 1 + ((promptData.text.length + idx * 17) % 50) / 250; // 0-0.2 variation
-          
-          // 4. Model-specific variation (different models have different pricing patterns)
-          const modelVariation = model.id.startsWith("openai:") 
-            ? 1 + (Math.random() * 0.1) // OpenAI: +0-10%
-            : model.id.includes("llama")
-            ? 1 + (Math.random() * 0.15 - 0.05) // Llama: -5% to +10%
-            : 1 + (Math.random() * 0.2 - 0.1); // Mistral: -10% to +10%
-          
-          // Combine all variations
-          const totalVariation = randomVariation * (1 + responseLengthFactor) * (1 + promptSpecificFactor) * modelVariation;
-          const variedPrice = basePrice * totalVariation;
-          
-          // Ensure minimum price to make Agona cut meaningful (at least $0.0001)
-          const minPrice = 0.0001;
-          const actualPrice = round6(Math.max(variedPrice, minPrice));
+          const totalFactor = promptIndexFactor + promptLengthFactor + tierFactor + randomFactor;
+          const priceRange = basePriceRange.max - basePriceRange.min;
+          const actualPrice = round6(basePriceRange.min + (priceRange * totalFactor));
           
           // Calculate Agona cut (5% of price, with small variation ±1%)
           const agonaCutVariation = 1 + (Math.random() * 0.02 - 0.01); // 0.99 to 1.01

@@ -66,7 +66,7 @@ export default function Home() {
 
   // Sample bulk prompts from customers (shown upfront)
   const samplePrompts = [
-    "What are the key benefits of using a microservices architecture?",
+    "How much did companies spend on AI API calls last year?",
     "Summarize this meeting: discussed Q4 goals, hiring plans, and product roadmap.",
     "Write a professional email to request a refund for order #12345",
     "Explain quantum computing in simple terms",
@@ -194,7 +194,8 @@ export default function Home() {
         </ul>
       </div>
 
-      {/* Live Demo */}
+      {/* Live Demo - Hidden */}
+      {false && (
       <div style={{
         background: '#f9f9f9',
         padding: 24,
@@ -423,6 +424,7 @@ export default function Home() {
           </div>
         )}
       </div>
+      )}
 
       {/* Bulk Marketplace Demo */}
       <div style={{
@@ -1052,10 +1054,6 @@ export default function Home() {
           Or use GET: <a href={sample} style={{color:"#0066cc"}}>https://www.agona.ai{sample}</a>
         </p>
       </div>
-
-      <p style={{marginTop:32,fontSize:14,color:"#666",fontStyle:"italic"}}>
-        Built this weekend. More models and bidding logic coming next.
-      </p>
     </main>
   );
 }

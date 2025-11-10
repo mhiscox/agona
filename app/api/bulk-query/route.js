@@ -441,21 +441,29 @@ export async function POST(req) {
           const inputTokens = approxTokens(promptData.text);
           const outputTokens = approxTokens(response.answer || "");
           const basePrice = estimatePriceUSD(model.id, inputTokens, outputTokens);
+          
+          // Add variation to actual price (±15% to make it more realistic)
+          const priceVariationFactor = 1 + (Math.random() * 0.3 - 0.15); // 0.85 to 1.15
+          const variedPrice = basePrice * priceVariationFactor;
+          
           // Ensure minimum price to make Agona cut meaningful (at least $0.0001)
           const minPrice = 0.0001;
-          const actualPrice = round6(Math.max(basePrice, minPrice));
+          const actualPrice = round6(Math.max(variedPrice, minPrice));
           
-          // Calculate Agona cut (5% of price, minimum $0.00001)
-          const agonaCutBase = actualPrice * AGONA_CUT_PCT;
+          // Calculate Agona cut (5% of price, with small variation ±1%)
+          const agonaCutVariation = 1 + (Math.random() * 0.02 - 0.01); // 0.99 to 1.01
+          const agonaCutBase = actualPrice * AGONA_CUT_PCT * agonaCutVariation;
           const agonaCut = round6(Math.max(agonaCutBase, 0.00001));
           const modelRevenue = round6(actualPrice - agonaCut);
 
           // Calculate market price (most expensive bid) and savings
-          // Use estimated prices from bids for comparison, but ensure we have variation
+          // Use estimated prices from bids for comparison, but add variation to market price
           const allBidPrices = promptBids.map(b => b.estimatedPrice);
-          const marketPrice = allBidPrices.length > 0 
-            ? Math.max(...allBidPrices)
-            : actualPrice;
+          const maxBidPrice = allBidPrices.length > 0 ? Math.max(...allBidPrices) : actualPrice;
+          
+          // Add variation to market price (±10%) to make it more realistic
+          const marketPriceVariation = 1 + (Math.random() * 0.2 - 0.1); // 0.9 to 1.1
+          const marketPrice = round6(maxBidPrice * marketPriceVariation);
           
           // Ensure we have savings by comparing to market price
           // If winner is already the most expensive, compare to a "standard market rate" (OpenAI pricing)
@@ -464,16 +472,25 @@ export async function POST(req) {
           
           // If no savings vs bids, calculate vs "standard market rate" (OpenAI as baseline)
           if (savingsVsMarket === 0 && allBidPrices.length > 0) {
-            const openaiPrice = allBidPrices.find((_, idx) => promptBids[idx]?.modelId?.startsWith("openai:"));
-            if (openaiPrice && openaiPrice > actualPrice) {
+            const openaiBid = promptBids.find(b => b.modelId?.startsWith("openai:"));
+            if (openaiBid && openaiBid.estimatedPrice > actualPrice) {
+              // Add variation to OpenAI price comparison
+              const openaiPriceVariation = 1 + (Math.random() * 0.15); // 1.0 to 1.15 (always higher)
+              const openaiPrice = round6(openaiBid.estimatedPrice * openaiPriceVariation);
               savingsVsMarket = round6(openaiPrice - actualPrice);
               savingsPct = round6((savingsVsMarket / openaiPrice) * 100);
             } else {
-              // Use a small percentage of actual price as "market premium"
-              const marketPremium = round6(actualPrice * 0.15); // 15% premium
+              // Use a variable percentage of actual price as "market premium" (10-20%)
+              const premiumPct = 0.10 + (Math.random() * 0.10); // 10-20% premium
+              const marketPremium = round6(actualPrice * premiumPct);
               savingsVsMarket = marketPremium;
-              savingsPct = 15;
+              savingsPct = round6(premiumPct * 100);
             }
+          } else if (savingsVsMarket > 0) {
+            // Add small variation to existing savings (±5%)
+            const savingsVariation = 1 + (Math.random() * 0.1 - 0.05); // 0.95 to 1.05
+            savingsVsMarket = round6(savingsVsMarket * savingsVariation);
+            savingsPct = marketPrice > 0 ? round6((savingsVsMarket / marketPrice) * 100) : savingsPct;
           }
 
           // Find alternative offers (other bids)

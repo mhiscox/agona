@@ -1054,6 +1054,10 @@ export default function Home() {
           Or use GET: <a href={sample} style={{color:"#0066cc"}}>https://www.agona.ai{sample}</a>
         </p>
       </div>
+
+      <p style={{marginTop:48,fontSize:12,color:"#999",textAlign:"center"}}>
+        Agona 2025
+      </p>
     </main>
   );
 }

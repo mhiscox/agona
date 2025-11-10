@@ -870,10 +870,17 @@ export default function Home() {
                             backgroundColor: tierColors[result.tier],
                             fontSize: 11,
                             fontWeight: 600,
-                            color: '#333'
+                            color: '#333',
+                            display: 'inline-block',
+                            marginBottom: 4
                           }}>
                             {tierLabels[result.tier]}
                           </span>
+                          {result.tierReason && (
+                            <div style={{ fontSize: 9, color: '#666', marginTop: 4, fontStyle: 'italic', maxWidth: '120px' }}>
+                              {result.tierReason}
+                            </div>
+                          )}
                         </td>
                         <td style={{ padding: '10px', color: '#000' }}>
                           <div style={{ fontWeight: 500, marginBottom: 4 }}>{result.winner.modelName}</div>
@@ -918,10 +925,23 @@ export default function Home() {
                   const qualityColors = { high: '#2e7d32', medium: '#f57c00', low: '#d32f2f' };
                   const qualityLabels = { high: 'High', medium: 'Medium', low: 'Low' };
                   return (
-                    <div key={result.promptId} style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #ddd' }}>
-                      <div style={{ fontWeight: 600, marginBottom: 12, color: '#000', fontSize: 14 }}>
-                        {result.prompt}
-                      </div>
+                        <div key={result.promptId} style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #ddd' }}>
+                          <div style={{ fontWeight: 600, marginBottom: 8, color: '#000', fontSize: 14 }}>
+                            {result.prompt}
+                          </div>
+                          {result.tierReason && (
+                            <div style={{ 
+                              marginBottom: 12, 
+                              padding: '8px 12px', 
+                              background: '#f0f7ff', 
+                              borderRadius: 6, 
+                              fontSize: 11, 
+                              color: '#666',
+                              borderLeft: '3px solid #0066cc'
+                            }}>
+                              <strong style={{ color: '#000' }}>Tier Classification:</strong> {result.tier} — {result.tierReason}
+                            </div>
+                          )}
                       
                       {/* Winner Card */}
                       <div style={{

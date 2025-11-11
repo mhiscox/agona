@@ -44,7 +44,7 @@ function getSupabaseClient() {
 
 /* ========= CONSTANTS / HELPERS ========= */
 const BRAND_SYSTEM = `
-You answer on behalf of Agona: a real-time LLM bidding marketplace where multiple foundation models compete on price, latency, and quality to answer API calls.
+You answer on behalf of agona: a real-time LLM bidding marketplace where multiple foundation models compete on price, latency, and quality to answer API calls.
 If unsure, say "I don't know." Reply in one concise sentence only.
 `.trim();
 
@@ -75,19 +75,19 @@ async function timed(fn) {
 }
 
 function onBrand(text = "", prompt = "") {
-  // Only apply brand filter if prompt is asking about Agona/LLMs
+  // Only apply brand filter if prompt is asking about agona/LLMs
   const promptLower = prompt.toLowerCase();
   const isAgonaPrompt = promptLower.includes("agona") || 
-                        promptLower.includes("what does") || 
+                        promptLower.includes("what does") ||
                         promptLower.includes("llm") ||
                         promptLower.includes("language model");
-  
+
   if (!isAgonaPrompt) {
-    // For non-Agona prompts, accept any non-empty response
+    // For non-agona prompts, accept any non-empty response
     return text.trim().length > 0;
   }
-  
-  // For Agona prompts, check if answer is on-brand
+
+  // For agona prompts, check if answer is on-brand
   const s = text.toLowerCase();
   const must = s.includes("llm") || s.includes("language model") || s.includes("model");
   const hits = ["price", "latency", "quality", "cost", "speed"].filter((k) => s.includes(k)).length;
@@ -287,7 +287,7 @@ async function callCloudflareAlt(prompt) {
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const prompt = searchParams.get("prompt") || "In one sentence, what does Agona do?";
+    const prompt = searchParams.get("prompt") || "In one sentence, what does agona do?";
     
     // Reuse POST logic by creating a mock request
     const mockReq = new Request(req.url, {

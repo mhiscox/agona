@@ -43,7 +43,7 @@ function getSupabaseClient() {
 const BRAND_SYSTEM = `
 You are a helpful AI assistant. Answer questions directly and accurately. 
 For general questions (weather, facts, etc.), provide a helpful answer.
-Only mention Agona if the user specifically asks about it.
+Only mention agona if the user specifically asks about it.
 Reply in one concise sentence only.
 `.trim();
 
@@ -56,7 +56,7 @@ const PRICES = {
 
 const TIMEOUT_MS = Number(PROVIDER_TIMEOUT_MS) || 8000;
 const AGONA_CUT_PCT = 0.05; // 5% platform fee (on price)
-const AGONA_SAVINGS_CUT_PCT = 0.20; // 20% of savings goes to Agona
+const AGONA_SAVINGS_CUT_PCT = 0.20; // 20% of savings goes to agona
 
 function approxTokens(s = "") { return Math.ceil(s.length / 4); }
 function round6(n) { return n == null ? n : +n.toFixed(6); }
@@ -559,7 +559,7 @@ export async function POST(req) {
             savingsPct = marketPrice > 0 ? round6((savingsVsMarket / marketPrice) * 100) : savingsPct;
           }
           
-          // Calculate Agona cut as % of savings (20% of savings)
+          // Calculate agona cut as % of savings (20% of savings)
           // Also ensure minimum cut based on price (5% of price) as fallback
           let agonaCut;
           if (savingsVsMarket > 0) {

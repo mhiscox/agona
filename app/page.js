@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 export default function Home() {
   const sample = "/api/query?prompt=" + encodeURIComponent(
-    "In one sentence, what does Agona do?"
+    "In one sentence, what does agona do?"
   );
 
   // Demo state
@@ -24,7 +24,7 @@ export default function Home() {
   const [activeBids, setActiveBids] = useState([]);
 
   const promptChips = [
-    'What does Agona do?',
+    'What does agona do?',
     'Draft a 2-sentence refund email',
     'Summarize this text'
   ];
@@ -164,7 +164,7 @@ export default function Home() {
       color:"#1a1a1a",
       minHeight:"100vh"
     }}>
-      <h1 style={{fontSize:"clamp(32px, 8vw, 42px)",marginBottom:8,fontWeight:700,color:"#000"}}>Agona</h1>
+      <h1 style={{fontSize:"clamp(32px, 8vw, 42px)",marginBottom:8,fontWeight:700,color:"#000"}}>agona</h1>
       <p style={{fontSize:"clamp(16px, 4vw, 20px)",marginBottom:32,color:"#333"}}>
         A real-time LLM bidding marketplace where multiple foundation models compete to answer your API calls.
       </p>
@@ -173,9 +173,9 @@ export default function Home() {
         <h2 style={{fontSize:"clamp(20px, 5vw, 24px)",marginTop:0,marginBottom:16,color:"#000"}}>How it works</h2>
         <ol style={{margin:0,paddingLeft:20,color:"#333"}}>
           <li style={{marginBottom:12}}>You send a batch of prompts via API request.</li>
-          <li style={{marginBottom:12}}>Agona analyzes and classifies your prompts into tiers (low/medium/high complexity).</li>
+          <li style={{marginBottom:12}}>agona analyzes and classifies your prompts into tiers (low/medium/high complexity).</li>
           <li style={{marginBottom:12}}>Multiple LLM providers bid on your prompts in real time based on price, quality, and latency (e.g. OpenAI, Cloudflare Workers AI, Anthropic, etc).</li>
-          <li style={{marginBottom:12}}>Agona selects the winning bid for each prompt based on the best balance of quality, speed, and cost.</li>
+          <li style={{marginBottom:12}}>agona selects the winning bid for each prompt based on the best balance of quality, speed, and cost.</li>
           <li style={{marginBottom:12}}>You get optimized responses for your entire batch — and see what you saved compared to using a single provider.</li>
         </ol>
         <p style={{marginTop:16,marginBottom:0,color:"#666",fontStyle:"italic",fontSize:14}}>
@@ -184,7 +184,7 @@ export default function Home() {
       </div>
 
       <div style={{marginBottom:32,color:"#1a1a1a"}}>
-        <h2 style={{fontSize:"clamp(20px, 5vw, 24px)",marginBottom:16,color:"#000"}}>Why use Agona</h2>
+        <h2 style={{fontSize:"clamp(20px, 5vw, 24px)",marginBottom:16,color:"#000"}}>Why use agona</h2>
         <ul style={{margin:0,paddingLeft:20,color:"#333"}}>
           <li style={{marginBottom:8}}><strong>Cheaper:</strong> Automatically routes to the lowest-cost model that meets quality thresholds.</li>
           <li style={{marginBottom:8}}><strong>Faster:</strong> Chooses the quickest model when quality is comparable.</li>
@@ -438,8 +438,8 @@ export default function Home() {
           Marketplace Demo: Bulk Prompts with Bidding
         </h2>
         <p style={{ fontSize: 14, color: '#666', marginBottom: 20 }}>
-          This demo shows how Agona works in production: API consumers send bulk prompts, Agona classifies them into tiers, 
-          models bid on prompts they want to handle, and Agona takes a 5% platform fee from each successful match.
+          This demo shows how agona works in production: API consumers send bulk prompts, agona classifies them into tiers, 
+          models bid on prompts they want to handle, and agona takes a 5% platform fee from each successful match.
         </p>
 
         {/* Show prompts upfront */}
@@ -647,7 +647,7 @@ export default function Home() {
                 {/* Arrow */}
                 <div style={{ fontSize: 24, color: '#0066cc', flex: '0 0 auto' }}>→</div>
 
-                {/* Step 2: Agona Processing */}
+                    {/* Step 2: agona Processing */}
                 <div style={{ textAlign: 'center', flex: '1 1 120px' }}>
                   <div style={{ 
                     width: 60, 
@@ -665,7 +665,7 @@ export default function Home() {
                   }}>
                     ⚙️
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>Agona</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#000' }}>agona</div>
                   <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
                     {auctionStage === 'classifying' ? 'Classifying...' : 'Complete'}
                   </div>
@@ -797,7 +797,7 @@ export default function Home() {
                   <div style={{ color: '#000', fontWeight: 600, fontSize: 20 }}>${bulkResults.summary.totalCost.toFixed(6)}</div>
                 </div>
                 <div>
-                  <div style={{ color: '#666', fontSize: 12 }}>Agona Revenue</div>
+                      <div style={{ color: '#666', fontSize: 12 }}>agona Revenue</div>
                   <div style={{ color: '#2e7d32', fontWeight: 600, fontSize: 20 }}>${bulkResults.summary.agonaRevenue.toFixed(6)}</div>
                 </div>
                 <div>
@@ -848,7 +848,7 @@ export default function Home() {
                     <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Price</th>
                     <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Market Price</th>
                     <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Savings</th>
-                    <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>Agona Cut</th>
+                    <th style={{ textAlign: 'right', padding: '10px', fontWeight: 600, color: '#000', fontFamily: 'monospace' }}>agona Cut</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1048,7 +1048,7 @@ export default function Home() {
         <pre style={{whiteSpace:"pre-wrap",background:"#111",color:"#eee",padding:16,borderRadius:8,overflow:"auto",fontSize:"clamp(12px, 3vw, 14px)"}}>
 {`curl -s -X POST https://www.agona.ai/api/query \\
   -H "Content-Type: application/json" \\
-  -d '{"prompt":"In one sentence, what does Agona do?"}' | jq .`}
+  -d '{"prompt":"In one sentence, what does agona do?"}' | jq .`}
         </pre>
         <p style={{fontSize:14,color:"#666",marginTop:8}}>
           Or use GET: <a href={sample} style={{color:"#0066cc"}}>https://www.agona.ai{sample}</a>
@@ -1056,7 +1056,7 @@ export default function Home() {
       </div>
 
       <p style={{marginTop:48,fontSize:12,color:"#999",textAlign:"center"}}>
-        Agona 2025
+        agona 2025
       </p>
     </main>
   );

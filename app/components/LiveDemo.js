@@ -6,7 +6,7 @@ export default function LiveDemo() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
-  const [prompt, setPrompt] = useState('In one sentence, what does Agona do?');
+  const [prompt, setPrompt] = useState('In one sentence, what does agona do?');
 
   const runDemo = async () => {
     setLoading(true);

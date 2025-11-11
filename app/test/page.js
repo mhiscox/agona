@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 export default function Test() {
-  const [prompt, setPrompt] = useState("In one sentence, what does Agona do?");
+  const [prompt, setPrompt] = useState("In one sentence, what does agona do?");
   const [json, setJson] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,7 @@ export default function Test() {
 
   return (
     <div style={{ padding: 24, fontFamily: "Inter, system-ui, sans-serif" }}>
-      <h2>Agona — marketplace test</h2>
+      <h2>agona — marketplace test</h2>
       <form onSubmit={send} style={{ display: "flex", gap: 8 }}>
         <input
           value={prompt}

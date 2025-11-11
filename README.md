@@ -1,4 +1,4 @@
-# Agona - LLM Bidding Marketplace
+# agona - LLM Bidding Marketplace
 
 A real-time LLM bidding marketplace where multiple foundation models compete on price, latency, and quality to answer API calls.
 

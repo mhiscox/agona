@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function Home() {
   const sample = "/api/query?prompt=" + encodeURIComponent(
@@ -22,6 +22,7 @@ export default function Home() {
   const [bulkError, setBulkError] = useState(null);
   const [auctionStage, setAuctionStage] = useState('idle'); // 'idle', 'classifying', 'bidding', 'processing'
   const [activeBids, setActiveBids] = useState([]);
+  const marketplaceDemoRef = useRef(null);
 
   const promptChips = [
     'What does agona do?',
@@ -79,6 +80,17 @@ export default function Home() {
     setBulkResults(null);
     setAuctionStage('classifying');
     setActiveBids([]);
+
+    // Scroll to marketplace demo section to show the loading animation
+    setTimeout(() => {
+      if (marketplaceDemoRef.current) {
+        marketplaceDemoRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+    }, 100); // Small delay to ensure state updates are rendered
 
     // Simulate auction stages with delays (longer for YC partners to see)
     // Stage 1: Classifying (2 seconds)
@@ -427,13 +439,16 @@ export default function Home() {
       )}
 
       {/* Bulk Marketplace Demo */}
-      <div style={{
-        background: '#f9f9f9',
-        padding: 24,
-        borderRadius: 12,
-        marginBottom: 32,
-        border: '1px solid #e0e0e0'
-      }}>
+      <div 
+        ref={marketplaceDemoRef}
+        style={{
+          background: '#f9f9f9',
+          padding: 24,
+          borderRadius: 12,
+          marginBottom: 32,
+          border: '1px solid #e0e0e0'
+        }}
+      >
         <h2 style={{ fontSize: 'clamp(20px, 5vw, 24px)', marginTop: 0, marginBottom: 8, color: '#000' }}>
           Marketplace Demo: Bulk Prompts with Bidding
         </h2>

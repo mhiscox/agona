@@ -23,6 +23,7 @@ export default function Home() {
   const [auctionStage, setAuctionStage] = useState('idle'); // 'idle', 'classifying', 'bidding', 'processing'
   const [activeBids, setActiveBids] = useState([]);
   const marketplaceDemoRef = useRef(null);
+  const auctionBoxRef = useRef(null);
 
   const promptChips = [
     'What does agona do?',
@@ -82,6 +83,7 @@ export default function Home() {
     setActiveBids([]);
 
     // Scroll to marketplace demo section to show the loading animation
+    // First scroll to the demo section, then scroll further to show the auction box at top
     setTimeout(() => {
       if (marketplaceDemoRef.current) {
         marketplaceDemoRef.current.scrollIntoView({ 
@@ -90,6 +92,17 @@ export default function Home() {
           inline: 'nearest'
         });
       }
+      // Then scroll further to position the auction box at the top of the screen
+      setTimeout(() => {
+        if (auctionBoxRef.current) {
+          const elementTop = auctionBoxRef.current.getBoundingClientRect().top + window.pageYOffset;
+          const offset = 20; // Small offset from top
+          window.scrollTo({
+            top: elementTop - offset,
+            behavior: 'smooth'
+          });
+        }
+      }, 300); // Wait for first scroll to complete
     }, 100); // Small delay to ensure state updates are rendered
 
     // Simulate auction stages with delays (longer for YC partners to see)
@@ -528,14 +541,17 @@ export default function Home() {
             marginTop: 16
           }}>
             {/* Auction Header */}
-            <div style={{ 
-              textAlign: 'center', 
-              marginBottom: 24,
-              padding: '16px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: 8,
-              color: '#fff'
-            }}>
+            <div 
+              ref={auctionBoxRef}
+              style={{ 
+                textAlign: 'center', 
+                marginBottom: 24,
+                padding: '16px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: 8,
+                color: '#fff'
+              }}
+            >
               <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>🏛️ Live Marketplace Auction</div>
               <div style={{ fontSize: 14, opacity: 0.9 }}>
                 {auctionStage === 'classifying' && '📊 Analyzing 5 prompts...'}

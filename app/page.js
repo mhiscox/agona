@@ -172,14 +172,14 @@ export default function Home() {
       <div style={{background:"#f5f5f5",padding:24,borderRadius:12,marginBottom:32,color:"#1a1a1a"}}>
         <h2 style={{fontSize:"clamp(20px, 5vw, 24px)",marginTop:0,marginBottom:16,color:"#000"}}>How it works</h2>
         <ol style={{margin:0,paddingLeft:20,color:"#333"}}>
-          <li style={{marginBottom:12}}>You send one API request with your prompt.</li>
-          <li style={{marginBottom:12}}>Agona fans it out to multiple LLM providers in real time (e.g. OpenAI, Cloudflare Workers AI, Anthropic, etc).</li>
-          <li style={{marginBottom:12}}>Each model returns its answer, price, and latency.</li>
-          <li style={{marginBottom:12}}>Agona ranks the responses by quality, speed, and cost.</li>
-          <li style={{marginBottom:12}}>You get the best-performing answer — and see what you saved compared to other models.</li>
+          <li style={{marginBottom:12}}>You send a batch of prompts via API request.</li>
+          <li style={{marginBottom:12}}>Agona analyzes and classifies your prompts into tiers (low/medium/high complexity).</li>
+          <li style={{marginBottom:12}}>Multiple LLM providers bid on your prompts in real time based on price, quality, and latency (e.g. OpenAI, Cloudflare Workers AI, Anthropic, etc).</li>
+          <li style={{marginBottom:12}}>Agona selects the winning bid for each prompt based on the best balance of quality, speed, and cost.</li>
+          <li style={{marginBottom:12}}>You get optimized responses for your entire batch — and see what you saved compared to using a single provider.</li>
         </ol>
         <p style={{marginTop:16,marginBottom:0,color:"#666",fontStyle:"italic",fontSize:14}}>
-          (Think "load balancer meets price auction" for AI models.)
+          (Think "AdWords for LLM prompts".)
         </p>
       </div>
 

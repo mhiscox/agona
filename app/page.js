@@ -166,7 +166,7 @@ export default function Home() {
     }}>
       <h1 style={{fontSize:"clamp(32px, 8vw, 42px)",marginBottom:8,fontWeight:700,color:"#000"}}>agona</h1>
       <p style={{fontSize:"clamp(16px, 4vw, 20px)",marginBottom:32,color:"#333"}}>
-        A real-time LLM bidding marketplace where multiple foundation models compete to answer your API calls.
+        The real-time LLM bidding marketplace where multiple foundation models compete to answer your API calls.
       </p>
 
       <div style={{background:"#f5f5f5",padding:24,borderRadius:12,marginBottom:32,color:"#1a1a1a"}}>
